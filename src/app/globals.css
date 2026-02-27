@@ -26,6 +26,10 @@
   --font-mono: "Geist Mono", ui-monospace, monospace;
 }
 
+@keyframes loaderSlide {
+  to { left: 200%; }
+}
+
 html {
   background-color: var(--color-surface);
   color: var(--color-text-primary);

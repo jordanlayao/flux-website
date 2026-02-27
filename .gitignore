@@ -22,6 +22,9 @@
 .DS_Store
 *.pem
 
+# frame sequences (too large for git, use LFS or CDN)
+/public/frames/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
