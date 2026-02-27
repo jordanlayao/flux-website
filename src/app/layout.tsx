@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { SmoothScrollProvider } from "@/components/animations/smooth-scroll-provider";
 
 export const metadata: Metadata = {
-  title: "Landing Page",
-  description: "",
+  title: "Flux — Treasury Intelligence",
+  description:
+    "Real-time visibility into cash across every entity, account, and currency. Stop reacting to yesterday's data.",
 };
 
 export default function RootLayout({
@@ -13,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body>
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
       </body>
