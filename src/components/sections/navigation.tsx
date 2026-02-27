@@ -8,8 +8,8 @@ export function Navigation() {
   return (
     <nav className="border-b border-border-default">
       <div className="mx-auto flex max-w-[1216px] items-center justify-between px-6 py-6">
-        <Link href="/" className="text-xl font-semibold tracking-tight">
-          flux
+        <Link href="/" className="flex items-center">
+          <img src="/logo/flux-logo.svg" alt="Flux" className="h-6" />
         </Link>
 
         <div className="flex items-center gap-6">
