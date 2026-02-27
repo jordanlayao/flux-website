@@ -13,12 +13,12 @@ export function Navigation() {
         </Link>
 
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-6 text-sm text-text-nav">
+          <div className="flex items-center gap-6">
             {navItems.map((item) => (
               <Link
                 key={item}
                 href="#"
-                className="transition-colors hover:text-text-primary"
+                className="text-[14px] font-normal leading-[1.8] tracking-[-0.14px] text-[#a1a1a1] transition-colors hover:text-white"
               >
                 {item}
               </Link>
