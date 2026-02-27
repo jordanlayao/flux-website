@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { SmoothScrollProvider } from "@/components/animations/smooth-scroll-provider";
+import { DevTools } from "@/components/dev-tools";
 
 export const metadata: Metadata = {
   title: "Flux — Treasury Intelligence",
@@ -19,6 +20,7 @@ export default function RootLayout({
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body>
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        <DevTools />
       </body>
     </html>
   );
