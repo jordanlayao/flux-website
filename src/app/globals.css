@@ -30,6 +30,15 @@
   to { left: 200%; }
 }
 
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@utility animate-scroll {
+  animation: scroll 25s linear infinite;
+}
+
 html {
   background-color: var(--color-surface);
   color: var(--color-text-primary);

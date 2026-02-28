@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 const navItems = ["Product", "Resources", "Customers", "Pricing"];
 
@@ -9,7 +10,7 @@ export function Navigation() {
     <nav className="border-b border-border-default">
       <div className="mx-auto flex max-w-[1216px] items-center justify-between px-6 py-6">
         <Link href="/" className="flex items-center">
-          <img src="/logo/flux-logo.svg" alt="Flux" className="h-6" />
+          <Image src="/logo/flux-logo.svg" alt="Flux" width={80} height={24} priority />
         </Link>
 
         <div className="flex items-center gap-6">

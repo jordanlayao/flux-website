@@ -1,4 +1,8 @@
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
+import { BentoCard1 } from "@/components/sections/bento-card-1";
+import { BentoCard2 } from "@/components/sections/bento-card-2";
+import { BentoCard3 } from "@/components/sections/bento-card-3";
+import { BentoCard4 } from "@/components/sections/bento-card-4";
 
 export function BentoGrid() {
   return (
@@ -19,18 +23,18 @@ export function BentoGrid() {
         <div className="mt-20 flex flex-col gap-8">
           <div className="flex gap-8">
             <ScrollReveal className="flex-[1.43]" delay={0.1}>
-              <div className="h-[557px] rounded border border-border-card bg-surface-card shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]" />
+              <BentoCard1 />
             </ScrollReveal>
             <ScrollReveal className="flex-1" delay={0.2}>
-              <div className="h-[557px] rounded border border-border-card bg-surface-card" />
+              <BentoCard2 />
             </ScrollReveal>
           </div>
           <div className="flex gap-8">
             <ScrollReveal className="flex-1" delay={0.1}>
-              <div className="h-[557px] rounded border border-border-card bg-surface-card" />
+              <BentoCard3 />
             </ScrollReveal>
             <ScrollReveal className="flex-[1.43]" delay={0.2}>
-              <div className="h-[557px] rounded border border-border-card bg-surface-card" />
+              <BentoCard4 />
             </ScrollReveal>
           </div>
         </div>

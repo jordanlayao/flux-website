@@ -1,14 +1,38 @@
+import dynamic from "next/dynamic";
 import { Navigation } from "@/components/sections/navigation";
 import { Hero } from "@/components/sections/hero";
-import { QuoteBlock } from "@/components/sections/quote-block";
-import { TrustBar } from "@/components/sections/trust-bar";
-import { BentoGrid } from "@/components/sections/bento-grid";
-import { SwitchbackScroll } from "@/components/sections/switchback-scroll";
-import { CardDeck } from "@/components/sections/card-deck";
-import { SwitchbackCircle } from "@/components/sections/switchback-circle";
-import { Testimonials } from "@/components/sections/testimonials";
-import { FooterAnimation } from "@/components/sections/footer-animation";
 import { GsapProvider } from "@/components/animations/gsap-provider";
+
+const QuoteBlock = dynamic(() =>
+  import("@/components/sections/quote-block").then((m) => m.QuoteBlock)
+);
+const TrustBar = dynamic(() =>
+  import("@/components/sections/trust-bar").then((m) => m.TrustBar)
+);
+const BentoGrid = dynamic(() =>
+  import("@/components/sections/bento-grid").then((m) => m.BentoGrid)
+);
+const SwitchbackScroll = dynamic(() =>
+  import("@/components/sections/switchback-scroll").then(
+    (m) => m.SwitchbackScroll
+  )
+);
+const CardDeck = dynamic(() =>
+  import("@/components/sections/card-deck").then((m) => m.CardDeck)
+);
+const SwitchbackCircle = dynamic(() =>
+  import("@/components/sections/switchback-circle").then(
+    (m) => m.SwitchbackCircle
+  )
+);
+const Testimonials = dynamic(() =>
+  import("@/components/sections/testimonials").then((m) => m.Testimonials)
+);
+const FooterAnimation = dynamic(() =>
+  import("@/components/sections/footer-animation").then(
+    (m) => m.FooterAnimation
+  )
+);
 
 const onboardingCards = [
   {
