@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 
 const Agentation = dynamic(
@@ -8,6 +10,13 @@ const Agentation = dynamic(
 );
 
 export function DevTools() {
-  if (process.env.NODE_ENV !== "development") return null;
-  return <Agentation />;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || process.env.NODE_ENV !== "development") return null;
+
+  return createPortal(<Agentation />, document.body);
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { motion, AnimatePresence, useSpring, useMotionValueEvent } from "framer-motion";
+import { motion, AnimatePresence, useSpring } from "framer-motion";
 import { House, CalendarDays, ChartLine, Bolt, X } from "lucide-react";
 
 const TABS = [
@@ -342,7 +342,7 @@ function DashboardScreen1() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 1.2 }}
-            className="absolute bottom-0 right-0 text-[11px] leading-[1.9] tracking-[-0.11px] text-[#966dd5]"
+            className="absolute bottom-[8%] right-0 text-[11px] leading-[1.9] tracking-[-0.11px] text-[#966dd5]"
           >
             $18.98
           </motion.span>
@@ -451,19 +451,286 @@ function DashboardScreen1() {
 }
 
 // ---------------------------------------------------------------------------
-// Placeholder screens
+// Calendar screen (Figma: node 248-1594)
 // ---------------------------------------------------------------------------
 
+const CALENDAR_DAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+type CalendarEventType = "earnings" | "economic" | "fed" | "options";
+
+const CALENDAR_EVENT_PILL_STYLES: Record<
+  CalendarEventType,
+  string
+> = {
+  earnings: "bg-[#42b251]/20 text-[#42b251] border border-[#42b251]/40",
+  economic: "bg-[#966dd5]/20 text-[#b8a0e0] border border-[#966dd5]/40",
+  fed: "bg-[#e89b4a]/20 text-[#e89b4a] border border-[#e89b4a]/40",
+  options: "bg-[#666]/30 text-[#939393] border border-[#555]",
+};
+
+const calendarEventsByDay: Record<number, { label: string; type: CalendarEventType }[]> = {
+  3: [{ label: "AMZN Earnings", type: "earnings" }],
+  5: [{ label: "GOOGL Earnings", type: "earnings" }],
+  6: [{ label: "Jobs Report", type: "fed" }],
+  11: [{ label: "CPI Data", type: "economic" }],
+  12: [{ label: "PPI Data", type: "economic" }],
+  13: [{ label: "Retail Sales", type: "economic" }],
+  17: [{ label: "NVDA Earnings", type: "earnings" }],
+  19: [{ label: "FOMC Minutes", type: "fed" }],
+  20: [{ label: "Options Exp.", type: "options" }],
+  25: [{ label: "GDP Q4 Final", type: "economic" }],
+  27: [{ label: "PCE Inflation", type: "economic" }],
+};
+
+const marketEventsList = [
+  {
+    type: "economic" as CalendarEventType,
+    dateLabel: "Today · 8:30 AM",
+    description:
+      "PCE Price Index for January — the Fed preferred inflation gauge. Core PCE expected at 2.6% YoY, unchanged from prior month.",
+  },
+  {
+    type: "earnings" as CalendarEventType,
+    dateLabel: "Mar 17 · After Close",
+    description:
+      "NVDA Q4 FY2026 earnings. Analysts expect EPS of $0.89 on revenue of $38.2B, driven by Blackwell GPU demand from hyperscalers.",
+  },
+  {
+    type: "fed" as CalendarEventType,
+    dateLabel: "Mar 19 · 2:00 PM ET",
+    description:
+      "FOMC meeting minutes release. Markets parsing language on rate cut timing after January hold at 4.25-4.50%.",
+  },
+  {
+    type: "options" as CalendarEventType,
+    dateLabel: "Mar 20 · Market Close",
+    description:
+      "Monthly options expiration. Elevated volatility expected in mega-cap tech and index ETFs as $2.1T in notional value expires.",
+  },
+  {
+    type: "economic" as CalendarEventType,
+    dateLabel: "Mar 25 · 8:30 AM ET",
+    description:
+      "GDP Q4 2025 Final Revision. Third estimate expected to confirm 2.3% annualized growth with upward core PCE revision.",
+  },
+];
+
+const LEGEND_ITEMS: { type: CalendarEventType; label: string }[] = [
+  { type: "earnings", label: "Earnings" },
+  { type: "economic", label: "Economic Data" },
+  { type: "fed", label: "Fed / FOMC" },
+  { type: "options", label: "Options Exp." },
+];
+
 function DashboardScreen2() {
+  const [viewDate, setViewDate] = useState(() => new Date());
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const today = new Date();
+  const isToday = (d: number) =>
+    today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const leadingEmpty = firstDay;
+  const totalCells = leadingEmpty + daysInMonth;
+  const gridRows = Math.ceil(totalCells / 7);
+
+  const goPrev = () => setViewDate((d) => new Date(d.getFullYear(), d.getMonth() - 1));
+  const goNext = () => setViewDate((d) => new Date(d.getFullYear(), d.getMonth() + 1));
+  const goToday = () => setViewDate(new Date());
+
+  const monthLabel = viewDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const fullDateLabel = viewDate.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  const prevMonthLabel = new Date(year, month - 1).toLocaleDateString("en-US", { month: "short" });
+  const nextMonthLabel = new Date(year, month + 1).toLocaleDateString("en-US", { month: "short" });
+
   return (
-    <div className="flex h-full items-center justify-center p-1">
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded border-[0.5px] border-[#393939] bg-[#131212] h-full">
-        <CalendarDays size={48} className="text-[#393939]" />
-        <span className="text-[14px] tracking-[-0.14px] text-[#515151]">Calendar — Coming soon</span>
+    <div className="relative flex h-full gap-1 p-1">
+      {/* Left: Calendar */}
+      <div className="flex w-[57%] shrink-0 flex-col gap-4 overflow-hidden rounded border-[0.5px] border-[#393939] bg-[#131212] p-6">
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col">
+            <span className="text-[14px] leading-[1.8] tracking-[-0.14px] text-[#a0a0a0]">
+              {fullDateLabel}
+            </span>
+            <span className="text-[17.5px] font-semibold leading-[1.6] tracking-[-0.175px] text-[#f6f5f5]">
+              {monthLabel}
+            </span>
+          </div>
+          <div className="flex items-start gap-1.5">
+            <button
+              type="button"
+              onClick={goPrev}
+              className="rounded border border-[#393939] bg-[#1a1a1a] px-2.5 py-1 text-[11px] leading-[1.9] tracking-[-0.11px] text-[#cbcbcb] transition-colors hover:border-[#4a4a4a]"
+            >
+              ← {prevMonthLabel}
+            </button>
+            <button
+              type="button"
+              onClick={goToday}
+              className="rounded border border-[#393939] bg-[#1a1a1a] px-2.5 py-1 text-[11px] leading-[1.9] tracking-[-0.11px] text-[#cbcbcb] transition-colors hover:border-[#4a4a4a]"
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={goNext}
+              className="rounded border border-[#393939] bg-[#1a1a1a] px-2.5 py-1 text-[11px] leading-[1.9] tracking-[-0.11px] text-[#cbcbcb] transition-colors hover:border-[#4a4a4a]"
+            >
+              {nextMonthLabel} →
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-1 flex-col gap-2 overflow-hidden">
+          <div className="grid grid-cols-7 gap-1">
+            {CALENDAR_DAY_LABELS.map((label) => (
+              <div
+                key={label}
+                className="py-1 text-center text-[11px] font-medium leading-[1.8] tracking-[-0.11px] text-[#666]"
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+          <div
+            className="grid flex-1 grid-cols-7 gap-1"
+            style={{ gridTemplateRows: `repeat(${gridRows}, minmax(0, 1fr))` }}
+          >
+            {Array.from({ length: leadingEmpty }, (_, i) => (
+              <div key={`empty-${i}`} className="rounded-md bg-[#1a1a1a]/50" />
+            ))}
+            {Array.from({ length: daysInMonth }, (_, i) => {
+              const day = i + 1;
+              const todayCell = isToday(day);
+              const events = calendarEventsByDay[day] ?? [];
+              return (
+                <div
+                  key={day}
+                  className={`flex flex-col gap-1 rounded-md border p-1.5 ${
+                    todayCell
+                      ? "border-[#966dd5] bg-[#966dd5]/10"
+                      : "border-transparent bg-[#1a1a1a]/50 hover:bg-[#1a1a1a]"
+                  }`}
+                >
+                  <span
+                    className={`text-[13px] leading-[1.4] tracking-[-0.13px] ${
+                      todayCell ? "text-[#f6f5f5]" : "text-[#939393]"
+                    }`}
+                  >
+                    {day}
+                  </span>
+                  <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
+                    {events.map((ev, j) => (
+                      <span
+                        key={j}
+                        className={`truncate rounded px-1.5 py-0.5 text-[10px] font-medium leading-tight border ${CALENDAR_EVENT_PILL_STYLES[ev.type]}`}
+                      >
+                        {ev.label}
+                      </span>
+                    ))}
+                  </div>
+                  {todayCell && (
+                    <span className="text-[10px] leading-tight text-[#966dd5]">Today</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-x-4 gap-y-1">
+            {LEGEND_ITEMS.map(({ type, label }) => (
+              <div key={type} className="flex items-center gap-1.5">
+                <span
+                  className="inline-block size-2.5 rounded-sm border border-[#393939]"
+                  style={{
+                    backgroundColor:
+                      type === "earnings"
+                        ? "rgba(66,178,81,0.5)"
+                        : type === "economic"
+                          ? "rgba(150,109,213,0.5)"
+                          : type === "fed"
+                            ? "rgba(232,155,74,0.5)"
+                            : "rgba(102,102,102,0.5)",
+                  }}
+                />
+                <span className="text-[11px] leading-[1.8] tracking-[-0.11px] text-[#939393]">
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right: Events Panel (Figma 248-1720) */}
+      <div className="relative flex flex-1 flex-col gap-2 overflow-hidden">
+        {/* Summary card */}
+        <div className="flex shrink-0 flex-col gap-4 rounded border border-[#393939] bg-[#131212] p-4">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full border border-[#575757] bg-[#1a1a1a] px-2 text-[11px] leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">
+              Market Events
+            </span>
+            <span className="text-[11px] leading-[1.9] tracking-[-0.11px] text-[#514e4e]">
+              {monthLabel}
+            </span>
+          </div>
+          <p className="text-[14px] font-semibold leading-[1.8] tracking-[-0.14px] text-[#f6f5f5]">
+            5 market-moving events ahead — PCE inflation data today, NVDA earnings on the 17th, and
+            FOMC minutes on the 19th.
+          </p>
+        </div>
+
+        {/* Event cards — scrollable */}
+        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-none" style={{ scrollbarWidth: "none" }}>
+          <div className="flex flex-col gap-2">
+            {marketEventsList.map((event, i) => (
+              <div
+                key={i}
+                className="flex flex-col gap-3 rounded border border-[#393939] bg-[#131212] p-4"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-full px-2 text-[11px] leading-[1.9] tracking-[-0.11px] ${
+                      event.type === "earnings"
+                        ? "bg-[#0d4114] text-[#42b251]"
+                        : event.type === "economic"
+                          ? "bg-[#2a1d3a] text-[#966dd5]"
+                          : event.type === "fed"
+                            ? "bg-[#3a2c0d] text-[#d4a855]"
+                            : "bg-[#232222] text-[#939393]"
+                    }`}
+                  >
+                    {event.type === "earnings" ? "Earnings" : event.type === "economic" ? "Economic Data" : event.type === "fed" ? "Fed / FOMC" : "Options Exp."}
+                  </span>
+                  <span className="text-[11px] leading-[1.9] tracking-[-0.11px] text-[#514e4e]">
+                    {event.dateLabel}
+                  </span>
+                </div>
+                <p className="text-[14px] leading-[1.8] tracking-[-0.14px] text-[#939393]">
+                  {event.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom fade */}
+        <div className="pointer-events-none absolute bottom-0 left-0 h-[70px] w-full bg-gradient-to-t from-[#171616] to-transparent" />
       </div>
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Placeholder screens
+// ---------------------------------------------------------------------------
 
 function DashboardScreen3() {
   return (
