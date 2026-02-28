@@ -1,11 +1,26 @@
 "use client";
 
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
+import { GrainGradient } from "@paper-design/shaders-react";
 
 export function Hero() {
   return (
-    <section className="border-b border-border-default pb-36 pt-24">
-      <div className="mx-auto max-w-[1216px] px-6">
+    <section className="relative border-b border-border-default pb-36 pt-24 overflow-hidden">
+      <GrainGradient
+        speed={1}
+        scale={1}
+        rotation={-24}
+        offsetX={0.1}
+        offsetY={0}
+        softness={0.32}
+        intensity={0.5}
+        noise={0.42}
+        shape="corners"
+        colors={["#4D4D4D", "#191919"]}
+        colorBack="#00000000"
+        className="!absolute inset-0 !w-full !h-full"
+      />
+      <div className="relative mx-auto max-w-[1216px] px-6">
         <ScrollReveal>
           <div className="flex flex-col gap-6">
             <div className="flex max-w-[796px] flex-col gap-4">
