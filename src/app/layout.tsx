@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { SmoothScrollProvider } from "@/components/animations/smooth-scroll-provider";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { DevTools } from "@/components/dev-tools";
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body>
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        <SpeedInsights />
         <DevTools />
       </body>
     </html>
