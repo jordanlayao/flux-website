@@ -267,7 +267,7 @@ function DashboardScreen1() {
   useEffect(() => {
     if (openNews !== null || isHovering) return;
 
-    const pause = hasStarted.current ? 4000 : 6000;
+    const pause = hasStarted.current ? 4000 : 3000;
     const timer = setTimeout(() => {
       hasStarted.current = true;
       const nextIndex = visibleIndex + 1;
