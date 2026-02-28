@@ -106,7 +106,7 @@ function SectorRow({ sector }: { sector: typeof sectors[number] }) {
 function NewsItem({ item }: { item: typeof newsItems[number] }) {
   return (
     <div
-      className={`flex w-full flex-col gap-4 overflow-hidden rounded border-[0.5px] border-[#393939] p-4 ${
+      className={`flex w-full shrink-0 flex-col gap-4 overflow-hidden rounded border-[0.5px] border-[#393939] p-4 ${
         item.featured ? "" : "bg-[#131212]"
       }`}
       style={
@@ -175,8 +175,12 @@ export function HeroDashboard() {
 
         {/* Chart area */}
         <div className="relative h-[200px] w-full">
-          <img src="/dashboard/grid-line.svg" alt="" className="absolute left-0 top-[15%] w-full" />
-          <img src="/dashboard/grid-line-dashed.svg" alt="" className="absolute left-0 top-[70%] w-full" />
+          <div className="absolute left-0 top-[15%] h-px w-full">
+            <img src="/dashboard/grid-line.svg" alt="" className="h-px w-full" />
+          </div>
+          <div className="absolute left-0 top-[70%] h-px w-full">
+            <img src="/dashboard/grid-line-dashed.svg" alt="" className="h-px w-full" />
+          </div>
           <img
             src="/dashboard/chart-line-main.svg"
             alt=""
@@ -219,10 +223,12 @@ export function HeroDashboard() {
 
       {/* Right: News Feed */}
       <div className="relative flex flex-1 flex-col gap-2 overflow-hidden">
-        {newsItems.map((item, i) => (
-          <NewsItem key={i} item={item} />
-        ))}
-        <div className="pointer-events-none absolute bottom-0 left-0 h-[70px] w-full bg-gradient-to-t from-[#171616] to-transparent" />
+        <div className="flex flex-col gap-2">
+          {newsItems.map((item, i) => (
+            <NewsItem key={i} item={item} />
+          ))}
+        </div>
+        <div className="pointer-events-none absolute bottom-0 left-0 h-[120px] w-full bg-gradient-to-t from-[#171616] to-transparent" />
       </div>
     </div>
   );
