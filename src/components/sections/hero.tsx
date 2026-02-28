@@ -2,6 +2,7 @@
 
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
 import { GrainGradient } from "@paper-design/shaders-react";
+import { HeroDashboard } from "./hero-dashboard";
 
 export function Hero() {
   return (
@@ -51,7 +52,9 @@ export function Hero() {
         </ScrollReveal>
 
         <ScrollReveal delay={0.2}>
-          <div className="mt-20 h-[80vh] w-full rounded-lg border border-border-subtle/50 bg-[#1a1a1a]" />
+          <div className="mt-20">
+            <HeroDashboard />
+          </div>
         </ScrollReveal>
       </div>
     </section>
