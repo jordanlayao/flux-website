@@ -37,8 +37,7 @@ const sectors = [
   { name: "Consumer Defensive", icon: "/dashboard/sector-consumer.svg", value: "+0.39%", positive: true, filledBars: 6, totalBars: 33 },
   { name: "Energy", icon: "/dashboard/sector-energy.svg", value: "+0.23%", positive: true, filledBars: 4, totalBars: 33 },
   { name: "Communication Services", icon: "/dashboard/sector-comms.svg", value: "+0.19%", positive: false, filledBars: 5, totalBars: 33 },
-  { name: "Basic Materials", icon: "/dashboard/sector-materials.svg", value: "+0.02%", positive: false, filledBars: 2, totalBars: 33 },
-  { name: "Industrials", icon: "/dashboard/sector-industrials.svg", value: "-0.32%", positive: false, filledBars: 7, totalBars: 33 },
+
 ];
 
 const newsItems = [
@@ -267,7 +266,7 @@ function DashboardScreen1() {
   useEffect(() => {
     if (openNews !== null || isHovering) return;
 
-    const pause = hasStarted.current ? 4000 : 3000;
+    const pause = hasStarted.current ? 4000 : 1000;
     const timer = setTimeout(() => {
       hasStarted.current = true;
       const nextIndex = visibleIndex + 1;
@@ -1260,7 +1259,7 @@ export function HeroDashboard() {
 
   return (
     <div className="relative mb-12">
-      <div className="relative h-[80vh] overflow-hidden rounded-lg border-[0.5px] border-[#262626] bg-[#1a1a1a]">
+      <div className="relative h-[680px] overflow-hidden rounded-lg border-[0.5px] border-[#262626] bg-[#1a1a1a]">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={activeIndex}

@@ -1,18 +1,20 @@
+"use client";
+
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
 
 const logos = [
-  { name: "Company 1", width: 91 },
-  { name: "Company 2", width: 120 },
-  { name: "Company 3", width: 101 },
-  { name: "Company 4", width: 133 },
-  { name: "Company 5", width: 90 },
-  { name: "Company 6", width: 58 },
-  { name: "Company 7", width: 77 },
+  { name: "Logo 1", src: "/trustbar logos/Vector.svg" },
+  { name: "Logo 2", src: "/trustbar logos/Vector-1.svg" },
+  { name: "Logo 3", src: "/trustbar logos/Vector-2.svg" },
+  { name: "Logo 4", src: "/trustbar logos/Vector-3.svg" },
+  { name: "Logo 5", src: "/trustbar logos/Vector-4.svg" },
+  { name: "Logo 6", src: "/trustbar logos/Vector-5.svg" },
+  { name: "Logo 7", src: "/trustbar logos/Vector-6.svg" },
 ];
 
 export function TrustBar() {
   return (
-    <section className="py-36">
+    <section className="py-36 pb-60">
       <div className="mx-auto max-w-[1216px] px-6">
         <ScrollReveal>
           <div className="flex flex-col gap-8">
@@ -21,14 +23,26 @@ export function TrustBar() {
               product teams.
             </p>
 
-            <div className="flex items-center justify-between">
-              {logos.map((logo) => (
-                <div
-                  key={logo.name}
-                  className="h-6 rounded bg-text-dim/20"
-                  style={{ width: logo.width }}
-                />
-              ))}
+            <div className="relative overflow-hidden">
+              {/* Left fade */}
+              <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-24 bg-gradient-to-r from-[#171616] to-transparent" />
+              {/* Right fade */}
+              <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-[#171616] to-transparent" />
+
+              <div className="flex w-max animate-scroll">
+                {[...logos, ...logos].map((logo, i) => (
+                  <div
+                    key={`${logo.name}-${i}`}
+                    className="flex shrink-0 items-center justify-center px-10"
+                  >
+                    <img
+                      src={logo.src}
+                      alt={logo.name}
+                      className="h-6 w-auto opacity-50 brightness-0 invert transition-opacity hover:opacity-80"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </ScrollReveal>
