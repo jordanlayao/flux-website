@@ -732,12 +732,264 @@ function DashboardScreen2() {
 // Placeholder screens
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Charts dashboard data
+// ---------------------------------------------------------------------------
+
+const CANDLE_HEIGHTS = [62,58,65,70,67,73,76,72,79,82,78,85,88,84,91,94,90,97,101,97,104,108,104,112,120];
+const VOLUME_HEIGHTS = [22,15,26,30,18,28,32,20,34,38,24,36,40,28,42,44,30,44,48,36,48,48,40,48,48];
+
+type BarSegments = [number, number, number];
+interface SectorRow { name: string; value: string; positive: boolean; segs: BarSegments }
+interface MoverRow { ticker: string; company: string; pct: string; price: string; positive: boolean; segs: BarSegments }
+interface IndexRow { name: string; region: string; pct: string; price: string; positive: boolean }
+
+const sectorPerfData: SectorRow[] = [
+  { name: "Technology", value: "+18.2%", positive: true, segs: [16, 15, 3] },
+  { name: "Financials", value: "+15.4%", positive: true, segs: [16, 12, 6] },
+  { name: "Cons. Disc.", value: "+12.8%", positive: true, segs: [16, 10, 8] },
+  { name: "Industrials", value: "+8.5%", positive: true, segs: [16, 8, 10] },
+  { name: "Healthcare", value: "+5.2%", positive: true, segs: [16, 5, 13] },
+  { name: "Energy", value: "-2.3%", positive: false, segs: [18, 2, 14] },
+];
+const topMoversData: MoverRow[] = [
+  { ticker: "NVDA", company: "Nvidia", pct: "+5.82%", price: "$897.42", positive: true, segs: [16, 15, 3] },
+  { ticker: "META", company: "Meta Platforms", pct: "+4.21%", price: "$612.18", positive: true, segs: [16, 9, 9] },
+  { ticker: "AAPL", company: "Apple", pct: "+2.87%", price: "$228.54", positive: true, segs: [16, 11, 7] },
+  { ticker: "TSLA", company: "Tesla", pct: "-3.14%", price: "$276.83", positive: false, segs: [12, 5, 17] },
+  { ticker: "INTC", company: "Intel", pct: "-4.92%", price: "$23.14", positive: false, segs: [15, 2, 17] },
+];
+const globalIndicesData: IndexRow[] = [
+  { name: "S&P 500", region: "United States", pct: "+1.25%", price: "$5,847", positive: true },
+  { name: "NASDAQ", region: "US Tech", pct: "+1.84%", price: "$18,421", positive: true },
+  { name: "DAX", region: "Germany", pct: "-0.42%", price: "$21,842", positive: false },
+  { name: "Nikkei 225", region: "Japan", pct: "+0.78%", price: "$38,927", positive: true },
+];
+const cryptoData: IndexRow[] = [
+  { name: "BTC", region: "Bitcoin", pct: "+2.34%", price: "$91,428", positive: true },
+];
+
+function SegmentedBar({ positive, segs }: { positive: boolean; segs: BarSegments }) {
+  const colors = positive
+    ? ["#444", "#42b251", "#0d4114"]
+    : ["#6c2d2e", "#ee575a", "#444"];
+  const bars: string[] = [];
+  segs.forEach((count, si) => { for (let j = 0; j < count; j++) bars.push(colors[si]); });
+  return (
+    <div className="flex items-center gap-[2px]">
+      {bars.map((c, i) => (
+        <div key={i} className="h-[10px] w-[2px] rounded-[0.5px]" style={{ background: c }} />
+      ))}
+    </div>
+  );
+}
+
+function MiniCandleGroup({ positive }: { positive: boolean }) {
+  const heights = positive ? [12, 10, 14, 8, 16, 11] : [14, 10, 12, 16, 8, 11];
+  return (
+    <div className="flex items-end gap-[2px]">
+      {heights.map((h, i) => (
+        <div
+          key={i}
+          className={`w-[4px] rounded-[1px] ${positive ? (i % 2 === 0 ? "bg-[#42b251]" : "bg-[#ee575a]") : (i % 2 === 0 ? "bg-[#ee575a]" : "bg-[#42b251]")}`}
+          style={{ height: h }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function DashboardScreen3() {
   return (
-    <div className="flex h-full items-center justify-center p-1">
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded border-[0.5px] border-[#393939] bg-[#131212] h-full">
-        <ChartLine size={48} className="text-[#393939]" />
-        <span className="text-[14px] tracking-[-0.14px] text-[#515151]">Charts — Coming soon</span>
+    <div className="flex h-full flex-col gap-1 overflow-hidden p-1">
+      {/* Top row */}
+      <div className="flex min-h-0 flex-[1.2] gap-1">
+        {/* S&P 500 Chart */}
+        <div
+          className="flex flex-[2.2] flex-col gap-[10px] overflow-hidden rounded border-[0.5px] border-[#393939] p-4"
+          style={{
+            backgroundImage: `url("data:image/svg+xml;utf8,<svg viewBox='0 0 888 467' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%25' width='100%25' fill='url(%23grad)' opacity='0.2'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(-58.993 -32.18 17.517 -51.298 888 490.47)'><stop stop-color='rgba(85,123,91,1)' offset='0'/><stop stop-color='rgba(43,62,45,1)' offset='0.33'/><stop stop-color='rgba(0,0,0,1)' offset='0.66'/></radialGradient></defs></svg>"), linear-gradient(90deg, #131212 0%, #131212 100%)`,
+          }}
+        >
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-col">
+              <span className="text-[11px] leading-[1.9] tracking-[-0.11px] text-[#a0a0a0]">
+                S&P 500 · Market Overview · Feb 27, 2026
+              </span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-[10px]">
+                  <span className="text-[27.34px] leading-[1.3] tracking-[-0.82px] text-[#f6f5f5]">5,847.83</span>
+                  <span className="text-[14px] font-medium leading-[1.8] tracking-[-0.14px] text-[#42b251]">+72.14&nbsp;&nbsp;&nbsp;+1.25%</span>
+                </div>
+                <span className="text-[11px] leading-[1.9] tracking-[-0.11px] text-[#797979]">As of 4:00 PM ET</span>
+              </div>
+            </div>
+            <div className="flex gap-[32px] text-[12px] font-medium text-[#939393]">
+              {["1M", "3M", "YTD", "1Y", "2Y", "5Y"].map((t, i) => (
+                <span key={t} className={i === 2 ? "font-normal text-[#f6f5f5]" : ""}>{t}</span>
+              ))}
+            </div>
+          </div>
+          {/* Candlestick chart */}
+          <div className="flex min-h-0 flex-1 gap-[6px]">
+            <div className="flex w-[44px] shrink-0 flex-col justify-between text-[11px] leading-[1.9] tracking-[-0.11px] text-[#797979]">
+              <span>5,900</span><span>5,800</span><span>5,700</span><span>5,600</span>
+            </div>
+            <div className="flex flex-1 items-start justify-between">
+              {CANDLE_HEIGHTS.map((h, i) => {
+                const green = i % 3 !== 1;
+                return (
+                  <div
+                    key={i}
+                    className={`w-[22px] rounded-[2px] border-[0.5px] ${green ? "border-[#63e374] bg-[#042909]" : "border-[#ffacae] bg-[#390304]"}`}
+                    style={{ height: `${(h / 120) * 100}%` }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+          {/* Month labels */}
+          <div className="flex gap-[6px]">
+            <div className="w-[44px] shrink-0" />
+            <div className="flex flex-1 justify-between text-[11px] leading-[1.9] tracking-[-0.11px] text-[#797979]">
+              {["Sep", "Oct", "Nov", "Dec", "Jan", "Feb"].map((m) => <span key={m}>{m}</span>)}
+            </div>
+          </div>
+          {/* Volume */}
+          <div className="flex shrink-0 flex-col gap-1">
+            <span className="text-[11px] leading-[1.9] tracking-[-0.11px] text-[#797979]">Volume</span>
+            <div className="flex h-[36px] items-end justify-between">
+              {VOLUME_HEIGHTS.map((h, i) => {
+                const green = i % 3 !== 1;
+                return (
+                  <div
+                    key={i}
+                    className={`w-[22px] rounded-[2px] border-[0.5px] ${green ? "border-[#63e374] bg-[#042909]" : "border-[#ffacae] bg-[#390304]"}`}
+                    style={{ height: h }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Right sidebar cards */}
+        <div className="flex flex-1 flex-col gap-1 overflow-hidden">
+          {/* Portfolio Value */}
+          <div className="flex flex-col gap-2 rounded border-[0.5px] border-[#393939] bg-[#131212] p-3">
+            <div className="flex flex-col">
+              <span className="text-[11px] font-medium leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">Portfolio Value</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-[22px] leading-[1.3] tracking-[-0.66px] text-[#f6f5f5]">$247,832.14</span>
+                <span className="text-[12px] font-medium leading-[1.8] tracking-[-0.12px] text-[#42b251]">+3.42% today</span>
+              </div>
+            </div>
+            <div className="flex h-4 items-center justify-between">
+              {Array.from({ length: 70 }, (_, i) => (
+                <div key={i} className={`h-full w-[2px] rounded-[0.5px] ${i < 36 ? "bg-[#444]" : i < 64 ? "bg-[#42b251]" : "bg-[#0d4114]"}`} />
+              ))}
+            </div>
+            <div className="flex justify-between leading-[1.9]">
+              <div className="flex flex-col pb-1"><span className="text-[9px] text-[#514e4e]">Day P&L</span><span className="text-[11px] font-medium tracking-[-0.11px] text-[#42b251]">+$8,243</span></div>
+              <div className="flex flex-col pb-1"><span className="text-[9px] text-[#514e4e]">Total Return</span><span className="text-[11px] font-medium tracking-[-0.11px] text-[#42b251]">+23.8%</span></div>
+              <div className="flex flex-col pb-1"><span className="text-[9px] text-[#514e4e]">Beta</span><span className="text-[11px] font-medium tracking-[-0.11px] text-[#cbcbcb]">1.12</span></div>
+              <div className="flex flex-col pb-1"><span className="text-[9px] text-[#514e4e]">Sharpe</span><span className="text-[11px] font-medium tracking-[-0.11px] text-[#cbcbcb]">1.84</span></div>
+            </div>
+          </div>
+          {/* Market Breadth */}
+          <div className="flex flex-1 flex-col gap-2 rounded border-[0.5px] border-[#393939] bg-[#131212] p-3">
+            <span className="text-[11px] font-medium leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">Market Breadth</span>
+            <div className="flex flex-col gap-[6px]">
+              <div className="flex items-center justify-between"><div className="flex items-center gap-2"><span className="text-[9px] leading-[1.9] text-[#514e4e]">Advancing</span><div className="h-[6px] w-[104px] rounded-full bg-[#42b251]" /></div><span className="text-[11px] font-medium leading-[1.9] tracking-[-0.11px] text-[#42b251]">2,847</span></div>
+              <div className="flex items-center justify-between"><div className="flex items-center gap-2"><span className="text-[9px] leading-[1.9] text-[#514e4e]">Declining</span><div className="h-[6px] w-[44px] rounded-full bg-[#ee575a]" /></div><span className="text-[11px] leading-[1.9] tracking-[-0.11px] text-[#ee575a]">1,203</span></div>
+              <div className="flex items-center justify-between"><div className="flex items-center gap-2"><span className="text-[9px] leading-[1.9] text-[#514e4e]">Unchanged</span><div className="size-[6px] rounded-full bg-[#444]" /></div><span className="text-[11px] font-medium leading-[1.9] tracking-[-0.11px] text-[#cbcbcb]">142</span></div>
+            </div>
+            <div className="flex justify-between leading-[1.9]">
+              <div className="flex flex-col pb-1"><span className="text-[9px] text-[#514e4e]">VIX</span><span className="text-[11px] tracking-[-0.11px] text-[#ee575a]">18.42</span></div>
+              <div className="flex flex-col pb-1"><span className="text-[9px] text-[#514e4e]">10Y Yield</span><span className="text-[11px] font-medium tracking-[-0.11px] text-[#42b251]">4.28%</span></div>
+              <div className="flex flex-col pb-1"><span className="text-[9px] text-[#514e4e]">DXY</span><span className="text-[11px] tracking-[-0.11px] text-[#ee575a]">103.82</span></div>
+              <div className="flex flex-col pb-1"><span className="text-[9px] text-[#514e4e]">WTI Oil</span><span className="text-[11px] tracking-[-0.11px] text-[#ee575a]">$71.40</span></div>
+              <div className="flex flex-col pb-1"><span className="text-[9px] text-[#514e4e]">Gold</span><span className="text-[11px] font-medium tracking-[-0.11px] text-[#42b251]">$2,912</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom row */}
+      <div className="flex min-h-0 flex-1 gap-1">
+        {/* Sector Performance */}
+        <div className="flex min-w-0 flex-1 flex-col gap-3 overflow-hidden rounded border-[0.5px] border-[#393939] bg-[#131212] p-4">
+          <span className="text-[11px] font-medium leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">Sector Performance · YTD</span>
+          <div className="flex flex-1 flex-col justify-between overflow-hidden">
+            {sectorPerfData.map((s) => (
+              <div key={s.name} className="flex items-center gap-2">
+                <span className="w-[60px] shrink-0 text-[9px] leading-[1.9] text-[#cbcbcb]">{s.name}</span>
+                <div className="min-w-0 flex-1"><SegmentedBar positive={s.positive} segs={s.segs} /></div>
+                <span className={`shrink-0 text-[11px] leading-[1.9] tracking-[-0.11px] ${s.positive ? "text-[#42b251]" : "text-[#ee575a]"}`}>{s.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Top Movers */}
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded border-[0.5px] border-[#393939] bg-[#131212] p-4">
+          <div className="flex flex-1 flex-col justify-between">
+            <span className="text-[11px] font-medium leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">Top Movers</span>
+            {topMoversData.map((s, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <div className="flex w-[60px] shrink-0 flex-col text-[9px] leading-[1.9]">
+                  <span className="text-[#cbcbcb]">{s.ticker}</span>
+                  <span className="truncate text-[#514e4e]">{s.company}</span>
+                </div>
+                <div className="min-w-0 flex-1"><SegmentedBar positive={s.positive} segs={s.segs} /></div>
+                <div className="flex shrink-0 gap-2 text-[11px] leading-[1.9] tracking-[-0.11px]">
+                  <span className={s.positive ? "text-[#42b251]" : "text-[#ee575a]"}>{s.pct}</span>
+                  <span className="text-[#939393]">{s.price}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Global Indices + Crypto */}
+        <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-hidden rounded border-[0.5px] border-[#393939] bg-[#131212] p-4">
+          <span className="text-[11px] font-medium leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">Global Indices</span>
+          <div className="flex flex-col gap-[6px]">
+            {globalIndicesData.map((s) => (
+              <div key={s.name} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex w-[73px] shrink-0 flex-col pb-[6px] text-[9px] leading-[1.9]">
+                    <span className="text-[#cbcbcb]">{s.name}</span>
+                    <span className="text-[#514e4e]">{s.region}</span>
+                  </div>
+                  <MiniCandleGroup positive={s.positive} />
+                </div>
+                <div className="flex gap-2 text-[11px] leading-[1.9] tracking-[-0.11px]">
+                  <span className={s.positive ? "text-[#42b251]" : "text-[#ee575a]"}>{s.pct}</span>
+                  <span className="text-[#939393]">{s.price}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <span className="text-[11px] font-medium leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">Crypto</span>
+          <div className="flex flex-col gap-[6px]">
+            {cryptoData.map((s) => (
+              <div key={s.name} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex w-[73px] shrink-0 flex-col pb-[6px] text-[9px] leading-[1.9]">
+                    <span className="text-[#cbcbcb]">{s.name}</span>
+                    <span className="text-[#514e4e]">{s.region}</span>
+                  </div>
+                  <MiniCandleGroup positive={s.positive} />
+                </div>
+                <div className="flex gap-2 text-[11px] leading-[1.9] tracking-[-0.11px]">
+                  <span className={s.positive ? "text-[#42b251]" : "text-[#ee575a]"}>{s.pct}</span>
+                  <span className="text-[#939393]">{s.price}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
