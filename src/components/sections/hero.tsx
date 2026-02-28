@@ -51,7 +51,7 @@ export function Hero() {
         </ScrollReveal>
 
         <ScrollReveal delay={0.2}>
-          <div className="mt-20 aspect-[1216/819] w-full rounded-lg border border-border-subtle/50 bg-[#1a1a1a]" />
+          <div className="mt-20 h-[80vh] w-full rounded-lg border border-border-subtle/50 bg-[#1a1a1a]" />
         </ScrollReveal>
       </div>
     </section>
