@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { motion, AnimatePresence, useSpring, useMotionValueEvent } from "framer-motion";
 import { House, CalendarDays, ChartLine, Bolt, X } from "lucide-react";
 
 const TABS = [
@@ -48,7 +48,7 @@ const newsItems = [
     time: "Summarized at 6:00 AM",
     featured: true,
     text: "Hedge funds retreat from tech and media as a potential market correction looms, while Apple plans a major investment in AI servers. Meanwhile, geopolitical factors influence economic confidence, and New Zealand report a retail sales rebound as the German business climate shows mild improvements.",
-    hasReadMore: true,
+    fullText: "Hedge funds retreat from tech and media as a potential market correction looms, while Apple plans a major investment in AI servers. Meanwhile, geopolitical factors influence economic confidence, and New Zealand report a retail sales rebound as the German business climate shows mild improvements.\n\nSeveral major hedge funds have begun unwinding long positions in mega-cap technology and media stocks, citing stretched valuations and deteriorating earnings momentum. The repositioning comes amid growing concerns that the S&P 500's concentration in a handful of tech names has left portfolios vulnerable to a sharp drawdown.\n\nSeparately, Apple confirmed plans to invest over $500 billion in domestic AI server infrastructure over the next five years, signaling a deeper push into enterprise AI services and on-device intelligence. Analysts expect the move to intensify competition with Microsoft Azure and Google Cloud.",
   },
   {
     source: "Daily recap",
@@ -56,20 +56,23 @@ const newsItems = [
     time: "10m ago",
     featured: false,
     text: "Oil prices climb for the 2nd day as US sanctions on Iran heighten fears of supply constrains",
+    fullText: "Oil prices climb for the 2nd day as US sanctions on Iran heighten fears of supply constraints.\n\nBrent crude futures rose 1.8% to $82.45 per barrel, extending gains after the White House announced a fresh round of sanctions targeting Iran's petroleum exports. The measures are expected to remove roughly 500,000 barrels per day from global supply, tightening an already strained market.\n\nOPEC+ members have signaled no plans to increase output quotas in the near term, further supporting the bullish outlook. Energy analysts at Goldman Sachs raised their Q3 price target to $90, citing robust demand from Asian refineries and limited spare capacity among Gulf producers.",
   },
   {
     source: "NVDA",
     sourceIcon: "/dashboard/news-nvda.svg",
     time: "30m ago",
     featured: false,
-    text: "Chinese firms boost Nividia's H20 chips orders, drive by the rising demands for DeepSeek's AI models, according to sources.",
+    text: "Chinese firms boost Nvidia's H20 chip orders, driven by the rising demands for DeepSeek's AI models, according to sources.",
+    fullText: "Chinese firms boost Nvidia's H20 chip orders, driven by the rising demands for DeepSeek's AI models, according to sources.\n\nMultiple Chinese cloud providers and AI startups have placed large orders for Nvidia's H20 accelerator — the highest-performance GPU currently cleared for export to China under US trade restrictions. The surge in demand is closely tied to the rapid adoption of DeepSeek's open-weight language models, which require substantial compute for both training and inference.\n\nNvidia's H20 shipments to China are expected to generate approximately $12 billion in revenue this fiscal year, making it one of the company's fastest-growing product lines. The trend underscores how export controls have reshaped, but not eliminated, China's appetite for advanced AI hardware.",
   },
   {
     source: "TSLA",
     sourceIcon: "/dashboard/news-tsla.svg",
     time: "1hr ago",
     featured: false,
-    text: "Chinese software updates plans add city navigation, enhancing car's driving-assistances for urban street navigation, per company notification and sources.",
+    text: "Tesla software update adds city navigation, enhancing driving assistance for urban streets, per company notification and sources.",
+    fullText: "Tesla software update adds city navigation, enhancing driving assistance for urban streets, per company notification and sources.\n\nTesla has begun rolling out version 2026.4.1 of its Full Self-Driving software, which introduces expanded city-street navigation across 14 new metropolitan areas in the United States and Europe. The update leverages an end-to-end neural network that processes real-time camera feeds to handle complex intersections, unprotected left turns, and pedestrian-heavy zones.\n\nEarly testers report significantly smoother lane changes and better handling of construction zones compared to the previous release. Tesla CEO Elon Musk noted on X that the company is on track to achieve unsupervised autonomous driving approval in select markets by late 2026, though regulatory hurdles remain.",
   },
   {
     source: "JNJ",
@@ -77,13 +80,15 @@ const newsItems = [
     time: "2hr ago",
     featured: false,
     text: "Johnson & Johnson to release Q4 earnings report.",
+    fullText: "Johnson & Johnson to release Q4 earnings report.\n\nJohnson & Johnson is scheduled to report fourth-quarter results before market open on Tuesday. Wall Street consensus expects revenue of $22.4 billion and adjusted EPS of $2.28, reflecting steady growth in the company's MedTech and Innovative Medicine segments.\n\nInvestors will be closely watching updates on the company's oncology pipeline, particularly the Phase III data readout for its next-generation bispecific antibody targeting non-small cell lung cancer. Management is also expected to provide guidance on the planned separation of its consumer health division, which is set to complete by mid-2026.",
   },
   {
     source: "ADBE",
     sourceIcon: "/dashboard/news-adbe.svg",
     time: "3hr ago",
     featured: false,
-    text: "Adobe Stock unveils new features to improve city navigation, boosting driving assistance capabilities for urban streets, according to company announcements and insider reports.",
+    text: "Adobe unveils new AI-powered features across Creative Cloud, boosting productivity for designers and content creators.",
+    fullText: "Adobe unveils new AI-powered features across Creative Cloud, boosting productivity for designers and content creators.\n\nAdobe announced a major update to its Creative Cloud suite, introducing generative AI capabilities powered by the latest Firefly models directly into Photoshop, Illustrator, and Premiere Pro. The new tools allow users to generate complex compositions, extend video scenes, and create vector graphics from natural-language prompts.\n\nThe company reported that enterprise adoption of its AI features has grown 340% year-over-year, with major media companies and advertising agencies integrating Adobe's generative tools into their production workflows. Adobe also revealed a new pricing tier for teams that includes unlimited Firefly credits, aiming to capture the growing demand for AI-assisted creative work.",
   },
 ];
 
@@ -153,10 +158,7 @@ function NewsItemContent({ item }: { item: typeof newsItems[number] }) {
         </div>
         <div className="flex items-center gap-1 text-[11px] leading-[1.9] tracking-[-0.11px]">
           {item.featured ? (
-            <>
-              <span className="text-[#939393]">{item.time}</span>
-              <img src="/dashboard/icon-maximize.svg" alt="" className="size-3" />
-            </>
+            <span className="text-[#939393]">{item.time}</span>
           ) : (
             <>
               <span className="text-[#939393]">Today</span>
@@ -173,7 +175,10 @@ function NewsItemContent({ item }: { item: typeof newsItems[number] }) {
             <span className="font-normal text-[#939393] underline">Read more</span>
           </span>
         ) : (
-          item.text
+          <>
+            {item.text}{" "}
+            <span className="text-[#939393] underline">Read more</span>
+          </>
         )}
       </p>
     </>
@@ -205,53 +210,9 @@ function NewsItem({
 
   if (isOpen) {
     return (
-      <>
-        {/* Invisible placeholder to preserve layout */}
-        <div className="invisible flex w-full shrink-0 flex-col gap-4 rounded border-[0.5px] p-4">
-          <NewsItemContent item={item} />
-        </div>
-
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm"
-          onClick={onClose}
-        />
-
-        {/* Expanded card — same layoutId so it animates from the card position */}
-        <motion.div
-          layoutId={`news-card-${index}`}
-          onClick={(e) => e.stopPropagation()}
-          className="absolute inset-x-4 top-[50%] z-30 -translate-y-1/2 flex flex-col gap-4 rounded-lg border border-[#393939] bg-[#131212] p-6"
-          style={{ borderRadius: 8 }}
-          transition={{ type: "spring", stiffness: 350, damping: 30 }}
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-black">
-                <img src={item.sourceIcon} alt="" className="size-[14px] object-contain" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[13px] font-semibold text-[#f6f5f5]">{item.source}</span>
-                <span className="text-[11px] text-[#515151]">{item.featured ? item.time : `Today · ${item.time}`}</span>
-              </div>
-            </div>
-            <button onClick={onClose} className="cursor-pointer rounded-full p-1 transition-colors hover:bg-white/10">
-              <X size={16} className="text-[#939393]" />
-            </button>
-          </div>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.15, duration: 0.2 }}
-            className="text-[14px] leading-[1.8] tracking-[-0.14px] text-[#cbcbcb]"
-          >
-            {item.text}
-          </motion.p>
-        </motion.div>
-      </>
+      <div className="invisible flex w-full shrink-0 flex-col gap-4 rounded border-[0.5px] p-4">
+        <NewsItemContent item={item} />
+      </div>
     );
   }
 
@@ -294,6 +255,42 @@ function NewsItem({
 
 function DashboardScreen1() {
   const [openNews, setOpenNews] = useState<number | null>(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [visibleIndex, setVisibleIndex] = useState(0);
+
+  const scrollY = useSpring(0, { stiffness: 120, damping: 14 });
+  const hasStarted = useRef(false);
+  const count = newsItems.length;
+  const doubledItems = [...newsItems, ...newsItems];
+
+  useEffect(() => {
+    if (openNews !== null || isHovering) return;
+
+    const pause = hasStarted.current ? 4000 : 6000;
+    const timer = setTimeout(() => {
+      hasStarted.current = true;
+      const nextIndex = visibleIndex + 1;
+
+      if (nextIndex >= count) {
+        scrollY.jump(0);
+        setVisibleIndex(0);
+        return;
+      }
+
+      const el = itemRefs.current[nextIndex];
+      if (el) {
+        const container = el.parentElement;
+        if (container) {
+          const offset = el.offsetTop - container.offsetTop;
+          scrollY.set(-offset);
+        }
+      }
+      setVisibleIndex(nextIndex);
+    }, pause);
+
+    return () => clearTimeout(timer);
+  }, [visibleIndex, openNews, isHovering, scrollY, count]);
 
   return (
     <div className="relative flex h-full gap-1 p-1">
@@ -371,21 +368,84 @@ function DashboardScreen1() {
         </div>
       </div>
 
-      <div className="relative flex flex-1 flex-col gap-2 overflow-hidden">
-        <div className="flex flex-col gap-2">
-          {newsItems.map((item, i) => (
-            <NewsItem
-              key={i}
-              item={item}
-              index={i}
-              isOpen={openNews === i}
-              onOpen={() => setOpenNews(i)}
-              onClose={() => setOpenNews(null)}
-            />
-          ))}
-        </div>
+      <div
+        className="relative flex flex-1 flex-col gap-2 overflow-hidden"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        <motion.div
+          className="flex flex-col gap-2"
+          style={{ y: scrollY }}
+        >
+          {doubledItems.map((item, i) => {
+            const realIndex = i % count;
+            return (
+              <div
+                key={i}
+                ref={i < count ? (el) => { itemRefs.current[i] = el; } : undefined}
+              >
+                <NewsItem
+                  item={item}
+                  index={i}
+                  isOpen={openNews === realIndex}
+                  onOpen={() => setOpenNews(realIndex)}
+                  onClose={() => setOpenNews(null)}
+                />
+              </div>
+            );
+          })}
+        </motion.div>
         <div className="pointer-events-none absolute bottom-0 left-0 h-[120px] w-full bg-gradient-to-t from-[#171616] to-transparent" />
       </div>
+
+      <AnimatePresence>
+        {openNews !== null && (
+          <>
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm"
+              onClick={() => setOpenNews(null)}
+            />
+            <motion.div
+              key="popup"
+              layoutId={`news-card-${openNews}`}
+              onClick={(e) => e.stopPropagation()}
+              className="absolute left-1/2 top-1/2 z-30 flex max-h-[80%] w-[90%] max-w-[480px] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-hidden rounded-lg border border-[#393939] bg-[#131212] p-6"
+              style={{ borderRadius: 8 }}
+              transition={{ type: "spring", stiffness: 350, damping: 30 }}
+            >
+              <div className="flex shrink-0 items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-black">
+                    <img src={newsItems[openNews].sourceIcon} alt="" className="size-[14px] object-contain" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[13px] font-semibold text-[#f6f5f5]">{newsItems[openNews].source}</span>
+                    <span className="text-[11px] text-[#515151]">{newsItems[openNews].featured ? newsItems[openNews].time : `Today · ${newsItems[openNews].time}`}</span>
+                  </div>
+                </div>
+                <button onClick={() => setOpenNews(null)} className="cursor-pointer rounded-full p-1 transition-colors hover:bg-white/10">
+                  <X size={16} className="text-[#939393]" />
+                </button>
+              </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.15, duration: 0.2 }}
+                className="min-h-0 flex-1 overflow-y-auto text-[14px] leading-[1.8] tracking-[-0.14px] text-[#cbcbcb] scrollbar-none"
+                style={{ scrollbarWidth: "none" }}
+              >
+                {newsItems[openNews].fullText.split("\n\n").map((para, i) => (
+                  <p key={i} className={i > 0 ? "mt-3" : ""}>{para}</p>
+                ))}
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
