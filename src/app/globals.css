@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-surface: #0a0a0a;
+  --color-surface: #171616;
   --color-surface-elevated: #171616;
   --color-surface-card: #292828;
 
