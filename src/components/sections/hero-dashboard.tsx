@@ -1203,7 +1203,11 @@ function DashboardTabBar({
 }) {
   return (
     <div className="absolute bottom-0 left-1/2 z-40 -translate-x-1/2 translate-y-1/2">
-      <div className="flex items-center gap-4 rounded-full border border-white/10 bg-[rgba(138,138,138,0.2)] p-2 backdrop-blur-[20px] backdrop-saturate-[180%]">
+      <div className="relative flex items-center gap-4 rounded-full p-2">
+        {/* Glass fill — single layer, mostly transparent */}
+        <div className="pointer-events-none absolute inset-0 rounded-full border border-white/[0.15] bg-white/[0.025] backdrop-blur-[2px] backdrop-saturate-[100%] backdrop-brightness-[1.0]" />
+        {/* Inner highlight */}
+        <div className="pointer-events-none absolute inset-0 rounded-full shadow-[inset_0_1px_0.5px_rgba(255,255,255,0.15),inset_0_-0.5px_0.5px_rgba(0,0,0,0.1)]" />
         {TABS.map((tab, i) => {
           const Icon = tab.icon;
           const isActive = i === activeIndex;
@@ -1217,14 +1221,14 @@ function DashboardTabBar({
               {isActive && (
                 <motion.div
                   layoutId="tab-indicator"
-                  className="absolute inset-0 rounded-full bg-white/10 border border-white/15"
+                  className="absolute inset-0 rounded-full bg-white/[0.12] border border-white/[0.12] shadow-[inset_0_1px_0.5px_rgba(255,255,255,0.15)]"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
               <Icon
                 size={22}
                 className={`relative z-10 transition-colors duration-200 ${
-                  isActive ? "text-white" : "text-[#666]"
+                  isActive ? "text-white/90" : "text-white/30"
                 }`}
                 strokeWidth={1.5}
               />
