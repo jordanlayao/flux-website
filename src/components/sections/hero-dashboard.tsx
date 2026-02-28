@@ -612,8 +612,11 @@ function DashboardScreen2() {
               const todayCell = isToday(day);
               const events = calendarEventsByDay[day] ?? [];
               return (
-                <div
+                <motion.div
                   key={day}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: i * 0.015, ease: [0.4, 0, 0.2, 1] }}
                   className={`flex flex-col gap-1 rounded-md border p-1.5 ${
                     todayCell
                       ? "border-[#966dd5] bg-[#966dd5]/10"
@@ -629,18 +632,21 @@ function DashboardScreen2() {
                   </span>
                   <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
                     {events.map((ev, j) => (
-                      <span
+                      <motion.span
                         key={j}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3, delay: 0.3 + i * 0.015 + j * 0.05, ease: [0.4, 0, 0.2, 1] }}
                         className={`truncate rounded px-1.5 py-0.5 text-[10px] font-medium leading-tight border ${CALENDAR_EVENT_PILL_STYLES[ev.type]}`}
                       >
                         {ev.label}
-                      </span>
+                      </motion.span>
                     ))}
                   </div>
                   {todayCell && (
                     <span className="text-[10px] leading-tight text-[#966dd5]">Today</span>
                   )}
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -691,8 +697,11 @@ function DashboardScreen2() {
         <div className="min-h-0 flex-1 overflow-y-auto scrollbar-none" style={{ scrollbarWidth: "none" }}>
           <div className="flex flex-col gap-2">
             {marketEventsList.map((event, i) => (
-              <div
+              <motion.div
                 key={i}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.3 + i * 0.1, ease: [0.4, 0, 0.2, 1] }}
                 className="flex flex-col gap-3 rounded border border-[#393939] bg-[#131212] p-4"
               >
                 <div className="flex items-center gap-2">
@@ -716,7 +725,7 @@ function DashboardScreen2() {
                 <p className="text-[14px] leading-[1.8] tracking-[-0.14px] text-[#939393]">
                   {event.description}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -839,10 +848,12 @@ function DashboardScreen3() {
               {CANDLE_HEIGHTS.map((h, i) => {
                 const green = i % 3 !== 1;
                 return (
-                  <div
+                  <motion.div
                     key={i}
-                    className={`w-[22px] rounded-[2px] border-[0.5px] ${green ? "border-[#63e374] bg-[#042909]" : "border-[#ffacae] bg-[#390304]"}`}
-                    style={{ height: `${(h / 120) * 100}%` }}
+                    initial={{ height: 0 }}
+                    animate={{ height: `${(h / 120) * 100}%` }}
+                    transition={{ duration: 0.6, delay: i * 0.03, ease: [0.4, 0, 0.2, 1] }}
+                    className={`w-[22px] rounded-[2px] border-[0.5px] ${green ? "border-[#46674A] bg-[#0E1810]" : "border-[#683C3D] bg-[#1B0F0F]"}`}
                   />
                 );
               })}
@@ -862,10 +873,12 @@ function DashboardScreen3() {
               {VOLUME_HEIGHTS.map((h, i) => {
                 const green = i % 3 !== 1;
                 return (
-                  <div
+                  <motion.div
                     key={i}
-                    className={`w-[22px] rounded-[2px] border-[0.5px] ${green ? "border-[#63e374] bg-[#042909]" : "border-[#ffacae] bg-[#390304]"}`}
-                    style={{ height: h }}
+                    initial={{ height: 0 }}
+                    animate={{ height: h }}
+                    transition={{ duration: 0.5, delay: 0.2 + i * 0.03, ease: [0.4, 0, 0.2, 1] }}
+                    className={`w-[22px] rounded-[2px] border-[0.5px] ${green ? "border-[#46674A] bg-[#0E1810]" : "border-[#683C3D] bg-[#1B0F0F]"}`}
                   />
                 );
               })}
@@ -995,12 +1008,181 @@ function DashboardScreen3() {
   );
 }
 
+const actionsData = [
+  { name: "Stop-Loss Trigger", desc: "Auto-sell if position down 5%", trigger: "Price drops 5%", status: "active" as const, lastRun: "Today 11:32", actions: ["Run", "Edit"] },
+  { name: "DCA Bitcoin", desc: "Buy $200 BTC weekly", trigger: "Every Friday 3:00 PM", status: "active" as const, lastRun: "Fri 15:00", actions: ["Run", "Edit"] },
+  { name: "RSI Overbought Alert", desc: "Notify when RSI over 70", trigger: "RSI crosses 70", status: "paused" as const, lastRun: "3 days ago", actions: ["Resume", "Edit"] },
+  { name: "Portfolio Rebalance", desc: "Monthly allocation check", trigger: "1st of each month", status: "active" as const, lastRun: "Feb 1 09:00", actions: ["Run", "Edit"] },
+  { name: "Earnings Alert", desc: "AAPL earnings in 24h", trigger: "24h before earnings", status: "triggered" as const, lastRun: "Today 09:15", actions: ["View", "Edit"] },
+];
+
+const sidebarActions = ["All Actions", "Trading Rules", "Price Alerts", "Scheduled"];
+const sidebarManage = ["Templates", "History", "Analytics"];
+const sidebarSettings = ["Notifications", "API Webhooks"];
+
+function StatusBadge({ status }: { status: "active" | "paused" | "triggered" }) {
+  const styles = {
+    active: "bg-[#0d4114] text-[#42b251]",
+    paused: "bg-[#232222] text-[#939393]",
+    triggered: "bg-[#2a1d3a] text-[#966dd5]",
+  };
+  const labels = { active: "Active", paused: "Paused", triggered: "Triggered" };
+  return (
+    <span className={`rounded-full px-2 py-[2px] text-[9px] font-medium ${styles[status]}`}>
+      {labels[status]}
+    </span>
+  );
+}
+
 function DashboardScreen4() {
   return (
-    <div className="flex h-full items-center justify-center p-1">
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded border-[0.5px] border-[#393939] bg-[#131212] h-full">
-        <Bolt size={48} className="text-[#393939]" />
-        <span className="text-[14px] tracking-[-0.14px] text-[#515151]">Actions — Coming soon</span>
+    <div className="flex h-full gap-1 overflow-hidden p-1">
+      {/* Sidebar */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+        className="flex w-[220px] shrink-0 flex-col gap-3 overflow-hidden rounded border-[0.5px] border-[#393939] bg-[#131212] p-4"
+      >
+        <div className="flex flex-col gap-2">
+          <div className="flex size-[40px] items-center justify-center rounded-full border border-[#4a3060] bg-[#2a1d3a]">
+            <span className="text-[14px] font-medium text-[#966dd5]">AM</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[13px] font-medium text-[#f6f5f5]">Alex Morgan</span>
+            <span className="text-[10px] font-medium text-[#514e4e]">alex@investwise.com</span>
+            <span className="w-fit rounded-full bg-[#0d4114] px-[8px] py-[1px] text-[9px] font-medium text-[#42b251]">PRO PLAN</span>
+          </div>
+        </div>
+        <div className="h-px w-full bg-[#232222]" />
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-medium text-[#514e4e]">ACTIONS</span>
+          <div className="flex flex-col">
+            {sidebarActions.map((item, i) => (
+              <div key={item} className={`rounded-[6px] px-3 py-[5px] ${i === 0 ? "border border-[#393939] bg-[#1a1a1a]" : ""}`}>
+                <span className={`text-[11px] font-medium ${i === 0 ? "text-[#f6f5f5]" : "text-[#939393]"}`}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-medium text-[#514e4e]">MANAGE</span>
+          <div className="flex flex-col">
+            {sidebarManage.map((item) => (
+              <div key={item} className="rounded-[6px] px-3 py-[5px]">
+                <span className="text-[11px] font-medium text-[#939393]">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-medium text-[#514e4e]">SETTINGS</span>
+          <div className="flex flex-col">
+            {sidebarSettings.map((item) => (
+              <div key={item} className="rounded-[6px] px-3 py-[5px]">
+                <span className="text-[11px] font-medium text-[#939393]">{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Main Content */}
+      <div className="flex flex-1 flex-col gap-1 overflow-hidden">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1, ease: [0.4, 0, 0.2, 1] }}
+          className="flex items-center justify-between rounded border-[0.5px] border-[#393939] bg-[#131212] px-5 py-[14px]"
+        >
+          <div className="flex flex-col gap-[2px]">
+            <span className="text-[17px] font-medium text-[#f6f5f5]">Actions</span>
+            <span className="text-[11px] font-medium text-[#939393]">Automate your trading strategies and alerts</span>
+          </div>
+          <div className="flex gap-2">
+            <button className="rounded-[6px] border border-[#393939] bg-[#1a1a1a] px-[14px] py-[7px] text-[12px] font-medium text-[#939393]">Import</button>
+            <button className="rounded-[6px] bg-[#42b251] px-[14px] py-[7px] text-[12px] font-medium text-[#0d4114]">+ New Action</button>
+          </div>
+        </motion.div>
+
+        {/* Stats Row */}
+        <div className="flex gap-1">
+          {[
+            { label: "ACTIVE RULES", value: "12", sub: "3 added this week", subColor: "text-[#42b251]" },
+            { label: "TRIGGERED TODAY", value: "8", sub: "Last at 2:41 PM", subColor: "text-[#939393]" },
+            { label: "SUCCESS RATE", value: "94.2%", sub: "2.1% this month", subColor: "text-[#42b251]" },
+            { label: "NEXT SCHEDULED", value: "14m", sub: "DCA Bitcoin 3:00 PM", subColor: "text-[#939393]" },
+          ].map((s, i) => (
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 + i * 0.08, ease: [0.4, 0, 0.2, 1] }}
+              className="flex flex-1 flex-col gap-[6px] rounded border-[0.5px] border-[#393939] bg-[#131212] p-4"
+            >
+              <span className="text-[10px] font-medium text-[#514e4e]">{s.label}</span>
+              <span className="text-[22px] font-medium text-[#f6f5f5]">{s.value}</span>
+              <span className={`text-[10px] font-medium ${s.subColor}`}>{s.sub}</span>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Table */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3, ease: [0.4, 0, 0.2, 1] }}
+          className="flex flex-1 flex-col gap-3 overflow-hidden rounded border-[0.5px] border-[#393939] bg-[#131212] p-4"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex gap-[2px]">
+              {["All", "Active", "Paused", "Triggered"].map((t, i) => (
+                <div key={t} className={`flex items-center rounded-[6px] px-3 py-[6px] ${i === 0 ? "border border-[#393939] bg-[#1a1a1a]" : ""}`}>
+                  <span className={`text-[11px] font-medium leading-none ${i === 0 ? "text-[#f6f5f5]" : "text-[#939393]"}`}>{t}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center rounded-[6px] border border-[#393939] bg-[#1a1a1a] px-3 py-[6px]">
+              <span className="text-[11px] font-medium leading-none text-[#514e4e]">Search actions...</span>
+            </div>
+          </div>
+
+          {/* Column Headers */}
+          <div className="flex items-center px-3 text-[10px] font-medium text-[#514e4e]">
+            <span className="flex-[2.2]">ACTION</span>
+            <span className="flex-[2]">TRIGGER</span>
+            <span className="flex-1">STATUS</span>
+            <span className="flex-[1.4]">LAST RUN</span>
+            <span className="flex-1">ACTIONS</span>
+          </div>
+
+          {/* Rows */}
+          <div className="flex flex-col gap-2 overflow-hidden">
+            {actionsData.map((row, i) => (
+              <motion.div
+                key={row.name}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.4 + i * 0.07, ease: [0.4, 0, 0.2, 1] }}
+                className="flex items-center rounded-[6px] border border-[#232222] bg-[#1a1a1a] px-3 py-[10px]"
+              >
+                <div className="flex flex-[2.2] flex-col gap-[2px]">
+                  <span className="text-[12px] font-medium text-[#cbcbcb]">{row.name}</span>
+                  <span className="text-[10px] font-medium text-[#514e4e]">{row.desc}</span>
+                </div>
+                <span className="flex-[2] text-[11px] font-medium text-[#939393]">{row.trigger}</span>
+                <div className="flex-1"><StatusBadge status={row.status} /></div>
+                <span className="flex-[1.4] text-[11px] font-medium text-[#939393]">{row.lastRun}</span>
+                <div className="flex flex-1 gap-[6px]">
+                  {row.actions.map((a) => (
+                    <span key={a} className="flex items-center justify-center rounded border border-[#393939] bg-[#1a1a1a] px-2 py-[3px] text-[10px] font-medium text-[#939393]">{a}</span>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </div>
   );
