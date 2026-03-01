@@ -468,7 +468,8 @@ export function FooterAnimation() {
       cancelAnimationFrame(s.rafId);
       clearTimeout(scrollEndTimer);
       clearTimeout(s.hiSwapTimer);
-      pending.clear();
+      remaining.clear();
+      initialQueue.length = 0;
     };
   }, [drawFrame, updateOverlays, ease, framePath]);
 
