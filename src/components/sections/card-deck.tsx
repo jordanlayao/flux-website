@@ -4,6 +4,7 @@ interface CardDeckProps {
   cards: {
     title: string;
     description: string;
+    illustration?: string;
   }[];
 }
 
@@ -18,7 +19,15 @@ export function CardDeck({ cards }: CardDeckProps) {
               className="flex flex-1 flex-col gap-8 overflow-hidden"
               delay={i * 0.15}
             >
-              <div className="aspect-[384/288] w-full rounded bg-surface-card" />
+              <div className="flex h-[288px] w-full items-center justify-center rounded">
+                {card.illustration && (
+                  <img
+                    src={card.illustration}
+                    alt=""
+                    className="h-full w-full object-contain"
+                  />
+                )}
+              </div>
               <div className="flex flex-col gap-2">
                 <h3 className="text-[21.88px] font-medium leading-[1.4] tracking-[-0.22px]">
                   {card.title}

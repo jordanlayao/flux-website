@@ -485,17 +485,13 @@ export function FooterAnimation() {
             >
               <h2
                 ref={headlineRef}
-                className="text-center text-[clamp(36px,5vw,72px)] font-normal leading-[1.1] tracking-[-0.02em] text-white"
+                className="text-center text-[42.72px] font-medium leading-[1.1] tracking-[-1.28px] text-[#f6f5f5]"
                 style={{
-                  fontFamily:
-                    "'Instrument Serif', Georgia, serif",
                   clipPath: "inset(0 0 100% 0)",
                 }}
               >
                 <span className="block">Built for the future.</span>
-                <span className="block">
-                  <em className="text-white/70">Available today.</em>
-                </span>
+                <span className="block">Available today.</span>
               </h2>
               <div
                 ref={ctaRef}
@@ -504,13 +500,13 @@ export function FooterAnimation() {
               >
                 <Link
                   href="#"
-                  className="inline-flex items-center rounded-md bg-white/95 px-[22px] py-2.5 text-[13px] font-medium tracking-[0.01em] text-[#111] transition-all hover:-translate-y-px hover:opacity-90"
+                  className="inline-flex items-center rounded border-[0.5px] border-[#adadad] bg-[#f9fefa] px-3 py-1 text-[14px] font-normal leading-[1.8] tracking-[-0.14px] text-[#042708] transition-all hover:-translate-y-px hover:opacity-90"
                 >
                   Get Started
                 </Link>
                 <Link
                   href="#"
-                  className="inline-flex items-center rounded-md border border-white/12 bg-[rgba(30,30,30,0.85)] px-[22px] py-2.5 text-[13px] font-medium tracking-[0.01em] text-white/90 backdrop-blur-sm transition-all hover:-translate-y-px hover:opacity-90"
+                  className="inline-flex items-center rounded border-[0.5px] border-[#363636] bg-[#262626] px-3 py-1 text-[14px] font-normal leading-[1.8] tracking-[-0.14px] text-[#f9fefa] transition-all hover:-translate-y-px hover:opacity-90"
                 >
                   Contact Sales
                 </Link>
@@ -541,23 +537,8 @@ export function FooterAnimation() {
         <div className="mx-auto max-w-[1200px]">
           <div className="grid grid-cols-[180px_repeat(5,1fr)] gap-6 border-b border-white/7 pb-14">
             <div className="flex items-start pt-0.5">
-              <Link href="/" className="flex items-center gap-2">
-                <svg
-                  viewBox="0 0 18 18"
-                  fill="none"
-                  className="h-[18px] w-[18px] shrink-0"
-                >
-                  <path
-                    d="M10.5 2L4 10H9.5L7.5 16L14 8H8.5L10.5 2Z"
-                    fill="white"
-                    stroke="white"
-                    strokeWidth="0.5"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <span className="text-base font-medium tracking-[-0.01em] text-white">
-                  flux
-                </span>
+              <Link href="/" className="flex items-center">
+                <img src="/logo/flux-logo.svg" alt="Flux" className="h-6 w-auto brightness-0 invert" />
               </Link>
             </div>
 

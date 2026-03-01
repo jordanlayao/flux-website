@@ -34,16 +34,19 @@ const onboardingCards = [
     title: "Connect your accounts",
     description:
       "Link your bank accounts, credit cards, and payment processors. Flux handles the secure API connections—you never share credentials.",
+    illustration: "/card-deck/Frame 284.svg",
   },
   {
     title: "Map your entities",
     description:
       "Tell Flux about your org structure. Which accounts belong to which entities? What are your approval thresholds? Set it once, forget it forever.",
+    illustration: "/card-deck/Frame 285.svg",
   },
   {
     title: "Start predicting",
     description:
       "Flux begins learning your cash patterns immediately. Within 48 hours, you'll have your first AI-generated forecast. The longer it runs, the smarter it gets.",
+    illustration: "/card-deck/Illustration 10.svg",
   },
 ];
 
