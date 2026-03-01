@@ -9,7 +9,7 @@ const CONFIG = {
   HI_SWAP_DELAY: 350,
   HI_SWAP_RADIUS: 15,
   EASING: [0.25, 0.1, 0.35, 1.0] as const,
-  ENTRY_FADE_END: 0.08,
+  ENTRY_FADE_END: 0.15,
   TEXT_FADE_IN_START: 0.28,
   TEXT_FADE_IN_END: 0.42,
   TEXT_FADE_OUT_START: 0.68,
@@ -470,14 +470,10 @@ export function FooterAnimation() {
             style={{ willChange: "transform" }}
           />
 
-          {/* Entry fade from above section */}
+          {/* Entry black fade-in */}
           <div
             ref={entryRef}
-            className="pointer-events-none absolute inset-0 z-[2]"
-            style={{
-              background:
-                "linear-gradient(to bottom, #171616 0%, transparent 40%)",
-            }}
+            className="pointer-events-none absolute inset-0 z-[2] bg-[#171616]"
           />
 
           {/* Text overlay */}
