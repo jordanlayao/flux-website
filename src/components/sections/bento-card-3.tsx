@@ -1,4 +1,4 @@
-import { ChevronRight, Pointer } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 export function BentoCard3() {
   return (
@@ -38,12 +38,12 @@ export function BentoCard3() {
         ))}
       </svg>
 
-      {/* Background faded paragraph text */}
+      {/* Background faded paragraph text — visible at bottom, fading upward */}
       <p
         className="absolute left-[calc(50%-181px)] top-[calc(50%-132px)] w-[359px] text-[17.5px] font-semibold leading-[1.6] tracking-[-0.175px]"
         style={{
           background:
-            "linear-gradient(to top, #131212 14.3%, #f6f5f5 32.5%)",
+            "linear-gradient(to top, #f6f5f5 5%, #131212 90%)",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",
@@ -55,25 +55,25 @@ export function BentoCard3() {
       </p>
 
       {/* Text cursor with "1" badge */}
-      <div className="absolute left-[138px] top-[266px]">
+      <div className="absolute left-[128px] top-[266px]">
         <div className="flex size-[14px] items-center justify-center rounded-[1px] bg-white">
           <span className="text-[11px] font-semibold leading-[1.9] tracking-[-0.11px] text-[#131212]">
             1
           </span>
         </div>
-        <Pointer
-          size={20}
-          className="absolute -bottom-[14px] left-[2px] fill-white text-white drop-shadow-md"
-          strokeWidth={1}
+        <img
+          src="/bento/Pointer.svg"
+          alt=""
+          className="absolute -bottom-[14px] left-[2px] size-5 drop-shadow-md"
         />
       </div>
 
       {/* Earnings call card */}
       <div className="absolute left-[190px] top-[130px] flex w-[203px] flex-col">
-        {/* Top section — speaker info */}
+        {/* Top section — speaker info + quote */}
         <div className="flex flex-col gap-[2px] overflow-hidden rounded-t-xl border-[0.5px] border-[#5f5f5f] bg-[#313131] p-1">
-          <div className="flex gap-1 rounded-2xl px-1 py-1">
-            <div className="flex items-center gap-1">
+          <div className="flex gap-1 px-1 py-1">
+            <div className="flex items-start gap-1">
               <div className="size-[34px] shrink-0 overflow-hidden rounded-full bg-[#4a4a4a]">
                 <div className="flex size-full items-center justify-center text-[12px] font-medium text-[#a0a0a0]">
                   JH
@@ -89,8 +89,8 @@ export function BentoCard3() {
               </div>
             </div>
           </div>
-          {/* Quote text with fade */}
-          <div className="rounded-2xl px-1 py-1">
+          {/* Quote text with gradient fade */}
+          <div className="px-1 py-1">
             <p
               className="text-[14px] font-normal leading-[1.8] tracking-[-0.14px]"
               style={{
@@ -106,25 +106,23 @@ export function BentoCard3() {
             </p>
           </div>
         </div>
-        {/* Bottom section — source tag */}
+        {/* Bottom section — source tags */}
         <div className="flex items-center justify-between rounded-b-xl border-x-[0.5px] border-b-[0.5px] border-[#5f5f5f] bg-[#313131] p-1">
           <div className="flex items-center gap-1 px-1 py-1">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 rounded bg-[#4d4d4d] pr-1">
               <div className="flex size-[20px] items-center justify-center rounded bg-[#76b900] p-[3px]">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="white"
-                  className="size-[14px]"
-                >
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14h-2v-2h2v2zm0-4h-2V7h2v5z" />
-                </svg>
+                <img
+                  src="/bento/NVIDIA.svg"
+                  alt=""
+                  className="size-[14px] brightness-0 invert"
+                />
               </div>
-              <span className="text-[9px] leading-[1.9] text-white">
+              <span className="text-[11px] leading-[1.9] text-white">
                 NVIDIA
               </span>
             </div>
             <div className="flex h-[20px] items-center rounded bg-[#4d4d4d] px-1">
-              <span className="text-[9px] leading-[1.9] text-white">
+              <span className="text-[11px] leading-[1.9] text-white">
                 Q1 2026
               </span>
             </div>

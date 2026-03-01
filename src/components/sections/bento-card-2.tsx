@@ -1,4 +1,4 @@
-import { ChevronRight, Pointer } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 const waveformSegments = [
   { w: 41, color: "#dadada" },
@@ -77,7 +77,11 @@ export function BentoCard2() {
             <div className="h-full min-w-0 flex-1 bg-[#4f4f4f]" />
           </div>
           <div className="absolute left-[162px] top-1/2 size-[14px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-md" />
-          <Pointer size={20} className="absolute left-[262px] top-[-2px] fill-white text-white drop-shadow-md" strokeWidth={1} />
+          <img
+            src="/bento/Pointer.svg"
+            alt=""
+            className="absolute left-[262px] top-[-2px] size-5 drop-shadow-md"
+          />
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[14px] leading-none tracking-[-0.14px] text-[#a0a0a0]">

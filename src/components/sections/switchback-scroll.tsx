@@ -1,10 +1,18 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Gamepad2, Radio, TrendingUpDown } from "lucide-react";
+import {
+  Gamepad2,
+  Radio,
+  TrendingUpDown,
+  UserRound,
+  FileText,
+  Database,
+  House,
+} from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -19,6 +27,7 @@ const tabContent = [
     title: "See your entire cash position in real-time",
     description:
       "Stop logging into multiple banking portals. Flux aggregates balances across every account, entity, and currency into one unified dashboard that updates automatically.",
+    chips: ["Dashboards", "Accounts"],
     features: [
       {
         num: "1",
@@ -44,6 +53,7 @@ const tabContent = [
     title: "AI-powered forecasting that learns your business",
     description:
       "Flux uses machine learning to analyze your historical cash flows, identify patterns, and predict future positions with increasing accuracy over time.",
+    chips: ["Forecasting", "Insights"],
     features: [
       {
         num: "1",
@@ -69,6 +79,7 @@ const tabContent = [
     title: "Take action with automated treasury operations",
     description:
       "Set rules, automate transfers, and optimize your cash deployment across accounts and entities without manual intervention.",
+    chips: ["Workflows", "Rules"],
     features: [
       {
         num: "1",
@@ -92,10 +103,123 @@ const tabContent = [
   },
 ];
 
+function Illustration() {
+  return (
+    <div className="relative size-full overflow-hidden bg-[#171616]">
+      <svg
+        className="pointer-events-none absolute inset-0 size-full"
+        preserveAspectRatio="none"
+      >
+        {[318, 490].map((x) => (
+          <line
+            key={`v-${x}`}
+            x1={`${(x / 808) * 100}%`}
+            y1="2%"
+            x2={`${(x / 808) * 100}%`}
+            y2="98%"
+            stroke="#2a2a2a"
+            strokeWidth={0.5}
+            strokeDasharray="4 4"
+          />
+        ))}
+        {[18, 312, 488, 782].map((y) => (
+          <line
+            key={`h-${y}`}
+            x1="0"
+            y1={`${(y / 800) * 100}%`}
+            x2="100%"
+            y2={`${(y / 800) * 100}%`}
+            stroke="#2a2a2a"
+            strokeWidth={0.5}
+            strokeDasharray="4 4"
+          />
+        ))}
+      </svg>
+
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-4">
+        <p className="text-[9px] leading-[1.9] text-[#a0a0a0]">Shared</p>
+        <div className="flex flex-col pl-2">
+          <div className="flex items-center gap-1">
+            <UserRound size={12} className="text-[#8b7cf6]" />
+            <span className="text-[11px] leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">
+              Customer Service
+            </span>
+          </div>
+          <div className="flex flex-col pl-4">
+            <div className="flex items-center gap-1">
+              <FileText size={12} className="text-[#6b8aed]" />
+              <span className="text-[11px] leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">
+                AI representative
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <FileText size={12} className="text-[#6b8aed]" />
+              <span className="text-[11px] leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">
+                Test Cases
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Database size={12} className="text-[#5ba0d0]" />
+              <span className="text-[11px] leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">
+                May Production Logs
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Database size={12} className="text-[#5ba0d0]" />
+              <span className="text-[11px] leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">
+                June Production Logs
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <House size={12} className="text-[#6b8aed]" />
+            <span className="text-[11px] leading-[1.9] tracking-[-0.11px] text-[#f6f5f5]">
+              Home
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SwitchbackScroll() {
   const sectionRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState(0);
   const [expandedFeature, setExpandedFeature] = useState(2);
+  const prevTabRef = useRef(0);
+
+  const animateTransition = useCallback((newTab: number) => {
+    if (!contentRef.current || newTab === prevTabRef.current) return;
+
+    const chips = contentRef.current.querySelector(".step-chips");
+    const title = contentRef.current.querySelector(".step-title");
+    const desc = contentRef.current.querySelector(".step-desc");
+    const rows = contentRef.current.querySelectorAll(".feature-row");
+    const els = [chips, title, desc, ...Array.from(rows)].filter(Boolean);
+
+    const tl = gsap.timeline();
+
+    tl.to(els, {
+      y: -30,
+      opacity: 0,
+      stagger: 0.03,
+      duration: 0.25,
+      ease: "power2.in",
+      onComplete: () => {
+        setActiveTab(newTab);
+        setExpandedFeature(2);
+        prevTabRef.current = newTab;
+      },
+    });
+
+    tl.fromTo(
+      els,
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, stagger: 0.05, duration: 0.35, ease: "power2.out" }
+    );
+  }, []);
 
   useGSAP(
     () => {
@@ -114,82 +238,109 @@ export function SwitchbackScroll() {
             Math.floor(self.progress * totalTabs),
             totalTabs - 1
           );
-          setActiveTab(idx);
-          setExpandedFeature(2);
+          if (idx !== prevTabRef.current) {
+            animateTransition(idx);
+          }
         },
       });
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [animateTransition] }
   );
 
   const content = tabContent[activeTab];
 
   return (
-    <section ref={sectionRef} className="bg-surface-elevated">
-      <div className="ml-auto flex max-w-[1328px] flex-col items-start py-36 pr-0 pl-6">
-        <div className="flex h-[800px] w-full gap-8">
-          <div className="flex w-[488px] shrink-0 flex-col justify-between">
-            <div className="flex flex-col gap-20 pt-6">
-              <div className="flex items-start">
-                <div className="flex gap-4 rounded-lg border border-border-input/50 bg-[linear-gradient(111deg,transparent_29%,rgba(0,0,0,0.2)_65%),linear-gradient(90deg,#1c1c1c,#1c1c1c)] p-1.5">
-                  {tabs.map((tab, i) => {
-                    const Icon = tab.icon;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(i)}
-                        className={`flex items-center gap-1.5 rounded px-1 py-0.5 pl-1 pr-1.5 font-mono text-xs uppercase tracking-[0.72px] transition-colors ${
-                          activeTab === i
-                            ? "bg-[#2e2d2d] text-white"
-                            : "text-text-dim"
-                        }`}
-                      >
-                        <Icon size={14} />
-                        {tab.label}
-                      </button>
-                    );
-                  })}
-                </div>
+    <section ref={sectionRef} className="h-screen bg-surface-elevated">
+      <div className="ml-auto flex h-full max-w-[1328px] items-start gap-8 py-12 pr-0 pl-6">
+        {/* Left column */}
+        <div className="flex w-[488px] shrink-0 flex-col justify-between self-stretch">
+          <div className="flex flex-col gap-16 pt-6">
+            {/* Tab bar */}
+            <div className="flex items-start">
+              <div
+                className="flex gap-4 rounded-lg border border-[#727272]/50 p-1.5"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(111deg, transparent 29.5%, rgba(0,0,0,0.2) 64.7%), linear-gradient(90deg, #1c1c1c, #1c1c1c)",
+                }}
+              >
+                {tabs.map((tab, i) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        if (i !== activeTab) animateTransition(i);
+                      }}
+                      className={`flex items-center gap-1.5 rounded px-1.5 py-0.5 font-mono text-[12px] uppercase tracking-[0.72px] transition-colors ${
+                        activeTab === i
+                          ? "bg-[#2e2d2d] text-white"
+                          : "text-[#939393]"
+                      }`}
+                    >
+                      <Icon size={14} />
+                      {tab.label}
+                    </button>
+                  );
+                })}
               </div>
+            </div>
 
+            {/* Learn more + chips + Title + description */}
+            <div ref={contentRef} className="flex flex-col gap-8">
+              <div className="step-chips flex items-center gap-2">
+                <span className="text-[13px] leading-[1.8] tracking-[-0.13px] text-[#939393]">
+                  Learn more
+                </span>
+                {content.chips.map((chip) => (
+                  <span
+                    key={chip}
+                    className="rounded-full border border-[#373737] bg-[#1c1c1c] px-3 py-0.5 font-mono text-[11px] uppercase tracking-[0.66px] text-[#a0a0a0]"
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
               <div className="flex max-w-[384px] flex-col gap-4">
-                <h3 className="max-w-[313px] text-[27.34px] font-medium leading-[1.3] tracking-[-0.82px]">
+                <h3 className="step-title max-w-[313px] text-[27.34px] font-medium leading-[1.3] tracking-[-0.82px]">
                   {content.title}
                 </h3>
-                <p className="text-sm leading-[1.8] tracking-[-0.14px] text-text-muted">
+                <p className="step-desc text-[14px] font-normal leading-[1.8] tracking-[-0.14px] text-[#a0a0a0]">
                   {content.description}
                 </p>
               </div>
             </div>
-
-            <div className="flex flex-col gap-4">
-              {content.features.map((feature, i) => (
-                <button
-                  key={feature.num}
-                  onClick={() =>
-                    setExpandedFeature(expandedFeature === i ? -1 : i)
-                  }
-                  className="flex gap-3.5 border-t border-border-feature pt-4 text-left"
-                >
-                  <span className="text-sm leading-[1.8] tracking-[-0.14px] text-white">
-                    {feature.num}
-                  </span>
-                  <div className="flex flex-col gap-2 pr-6">
-                    <span className="text-sm leading-[1.8] tracking-[-0.14px] text-text-primary">
-                      {feature.title}
-                    </span>
-                    {expandedFeature === i && (
-                      <p className="text-sm leading-[1.8] tracking-[-0.14px] text-text-muted">
-                        {feature.detail}
-                      </p>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
           </div>
 
-          <div className="h-[800px] flex-1 bg-surface-card" />
+          {/* Feature rows */}
+          <div className="flex flex-col gap-4 pb-6">
+            {content.features.map((feature, i) => (
+              <button
+                key={`${activeTab}-${feature.num}`}
+                onClick={() => setExpandedFeature(i)}
+                className="feature-row flex gap-3.5 border-t border-[#373737] pt-4 text-left"
+              >
+                <span className="text-[14px] leading-[1.8] tracking-[-0.14px] text-white">
+                  {feature.num}
+                </span>
+                <div className="flex flex-1 flex-col gap-2 pr-6">
+                  <span className="text-[14px] leading-[1.8] tracking-[-0.14px] text-[#f6f5f5]">
+                    {feature.title}
+                  </span>
+                  {expandedFeature === i && (
+                    <p className="text-[14px] leading-[1.8] tracking-[-0.14px] text-[#a0a0a0]">
+                      {feature.detail}
+                    </p>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Right illustration */}
+        <div className="flex-1 self-stretch overflow-hidden rounded">
+          <Illustration />
         </div>
       </div>
     </section>

@@ -20,11 +20,6 @@ const SwitchbackScroll = dynamic(() =>
 const CardDeck = dynamic(() =>
   import("@/components/sections/card-deck").then((m) => m.CardDeck)
 );
-const SwitchbackCircle = dynamic(() =>
-  import("@/components/sections/switchback-circle").then(
-    (m) => m.SwitchbackCircle
-  )
-);
 const Testimonials = dynamic(() =>
   import("@/components/sections/testimonials").then((m) => m.Testimonials)
 );
@@ -62,7 +57,6 @@ export default function Home() {
       <BentoGrid />
       <SwitchbackScroll />
       <CardDeck cards={onboardingCards} />
-      <SwitchbackCircle />
       <Testimonials />
       <FooterAnimation />
     </GsapProvider>
