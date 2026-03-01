@@ -139,6 +139,7 @@ const footerColumns = [
 export function FooterAnimation() {
   const tunnelRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const entryRef = useRef<HTMLDivElement>(null);
   const exitRef = useRef<HTMLDivElement>(null);
   const textWrapRef = useRef<HTMLDivElement>(null);
@@ -166,6 +167,8 @@ export function FooterAnimation() {
     lastDrawnFrame: -1,
     hiSwapTimer: 0,
     isMobile: false,
+    tunnelTop: 0,
+    tunnelH: 1,
   });
 
   const ease = useRef(makeCubicBezier(...CONFIG.EASING)).current;
@@ -177,10 +180,9 @@ export function FooterAnimation() {
 
   const drawImage = useCallback(
     (img: ImageBitmap | HTMLImageElement) => {
+      const ctx = ctxRef.current;
       const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+      if (!ctx || !canvas) return;
 
       const cw = canvas.width;
       const ch = canvas.height;
@@ -213,14 +215,15 @@ export function FooterAnimation() {
           : null;
 
       if (!img) {
-        for (let delta = 1; delta < CONFIG.TOTAL_FRAMES; delta++) {
-          const ci = f + delta * s.scrollDir;
-          if (ci < 0 || ci >= CONFIG.TOTAL_FRAMES) break;
-          const ri = Math.round(ci);
-          if (s.loLoaded[ri]) {
-            img = s.hiLoaded[ri] ? s.hiFrames[ri] : s.loFrames[ri];
-            break;
+        for (let delta = 1; delta < 30; delta++) {
+          for (const dir of [s.scrollDir, -s.scrollDir]) {
+            const ri = f + delta * dir;
+            if (ri >= 0 && ri < CONFIG.TOTAL_FRAMES && s.loLoaded[ri]) {
+              img = s.hiLoaded[ri] ? s.hiFrames[ri] : s.loFrames[ri];
+              break;
+            }
           }
+          if (img) break;
         }
         if (!img) return;
       }
@@ -284,19 +287,29 @@ export function FooterAnimation() {
 
     const canvas = canvasRef.current;
     if (!canvas) return;
+    ctxRef.current = canvas.getContext("2d", { alpha: false });
+
+    const cacheTunnelRect = () => {
+      const tunnel = tunnelRef.current;
+      if (!tunnel) return;
+      s.tunnelTop = tunnel.offsetTop;
+      s.tunnelH = tunnel.offsetHeight - window.innerHeight;
+    };
 
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      ctxRef.current = canvas.getContext("2d", { alpha: false });
       s.isMobile = window.innerWidth <= 768;
       s.lastDrawnFrame = -1;
+      cacheTunnelRect();
     };
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
     const tick = () => {
       const delta = s.targetFrameF - s.currentFrameF;
-      const lerpFactor = s.isScrolling ? 0.28 : 0.15;
+      const lerpFactor = s.isScrolling ? 0.3 : 0.15;
       if (Math.abs(delta) < 0.01) {
         s.currentFrameF = s.targetFrameF;
       } else {
@@ -314,6 +327,7 @@ export function FooterAnimation() {
     };
 
     const swapToHiRes = () => {
+      if (s.isScrolling) return;
       const center = Math.round(s.currentFrameF);
       const start = Math.max(0, center - CONFIG.HI_SWAP_RADIUS);
       const end = Math.min(
@@ -336,13 +350,8 @@ export function FooterAnimation() {
     let scrollEndTimer = 0;
 
     const onScroll = () => {
-      const tunnel = tunnelRef.current;
-      if (!tunnel) return;
-
-      const rect = tunnel.getBoundingClientRect();
-      const tunnelH = tunnel.offsetHeight - window.innerHeight;
-      const scrolled = -rect.top;
-      s.rawScrollProgress = clamp01(scrolled / tunnelH);
+      const scrolled = window.scrollY - s.tunnelTop;
+      s.rawScrollProgress = clamp01(scrolled / s.tunnelH);
 
       s.scrollDir = window.scrollY > s.lastScrollY ? 1 : -1;
       s.lastScrollY = window.scrollY;
@@ -354,7 +363,7 @@ export function FooterAnimation() {
       clearTimeout(scrollEndTimer);
       scrollEndTimer = window.setTimeout(() => {
         s.isScrolling = false;
-      }, 80);
+      }, 100);
 
       clearTimeout(s.hiSwapTimer);
       s.hiSwapTimer = window.setTimeout(swapToHiRes, CONFIG.HI_SWAP_DELAY);
@@ -379,29 +388,61 @@ export function FooterAnimation() {
       }
     }
 
-    const order = bspOrder(CONFIG.TOTAL_FRAMES);
+    const CONCURRENCY = 8;
+    let activeLoads = 0;
+    const pending = new Set<number>();
+    for (let i = 0; i < CONFIG.TOTAL_FRAMES; i++) pending.add(i);
     let readyCount = 0;
 
-    order.forEach((frameIdx) => {
-      loadBitmap(framePath(frameIdx + 1, "lo"))
-        .then((bitmap) => {
-          s.loFrames[frameIdx] = bitmap;
-          s.loLoaded[frameIdx] = true;
-          readyCount++;
+    function pickNext(): number | null {
+      if (pending.size === 0) return null;
+      const center = Math.round(s.targetFrameF);
+      let best: number | null = null;
+      let bestDist = Infinity;
+      for (const idx of pending) {
+        const dist = Math.abs(idx - center);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = idx;
+        }
+      }
+      return best;
+    }
 
-          if (readyCount === CONFIG.PRELOAD_BLOCKING && !s.initialLoadDone) {
-            s.initialLoadDone = true;
-            if (loaderRef.current) {
-              loaderRef.current.style.opacity = "0";
-              loaderRef.current.style.pointerEvents = "none";
+    function loadNext() {
+      while (activeLoads < CONCURRENCY) {
+        const idx = pickNext();
+        if (idx === null) return;
+        pending.delete(idx);
+        activeLoads++;
+
+        loadBitmap(framePath(idx + 1, "lo"))
+          .then((bitmap) => {
+            s.loFrames[idx] = bitmap;
+            s.loLoaded[idx] = true;
+            readyCount++;
+
+            if (readyCount === CONFIG.PRELOAD_BLOCKING && !s.initialLoadDone) {
+              s.initialLoadDone = true;
+              if (loaderRef.current) {
+                loaderRef.current.style.opacity = "0";
+                loaderRef.current.style.pointerEvents = "none";
+              }
+              cacheTunnelRect();
+              drawFrame(0);
+              s.rafId = requestAnimationFrame(tick);
+              onScroll();
             }
-            drawFrame(0);
-            s.rafId = requestAnimationFrame(tick);
-            onScroll();
-          }
-        })
-        .catch(() => {});
-    });
+          })
+          .catch(() => {})
+          .finally(() => {
+            activeLoads--;
+            loadNext();
+          });
+      }
+    }
+
+    loadNext();
 
     return () => {
       window.removeEventListener("resize", resizeCanvas);
@@ -409,6 +450,7 @@ export function FooterAnimation() {
       cancelAnimationFrame(s.rafId);
       clearTimeout(scrollEndTimer);
       clearTimeout(s.hiSwapTimer);
+      pending.clear();
     };
   }, [drawFrame, updateOverlays, ease, framePath]);
 
@@ -425,6 +467,7 @@ export function FooterAnimation() {
           <canvas
             ref={canvasRef}
             className="absolute inset-0 block h-full w-full"
+            style={{ willChange: "transform" }}
           />
 
           {/* Entry fade from above section */}
