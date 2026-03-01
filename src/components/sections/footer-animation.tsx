@@ -5,7 +5,7 @@ import Link from "next/link";
 
 const CONFIG = {
   TOTAL_FRAMES: 386,
-  PRELOAD_BLOCKING: 20,
+  PRELOAD_BLOCKING: 60,
   HI_SWAP_DELAY: 350,
   HI_SWAP_RADIUS: 15,
   EASING: [0.25, 0.1, 0.35, 1.0] as const,
@@ -388,52 +388,70 @@ export function FooterAnimation() {
       }
     }
 
-    const CONCURRENCY = 8;
+    const CONCURRENCY = 6;
     let activeLoads = 0;
-    const pending = new Set<number>();
-    for (let i = 0; i < CONFIG.TOTAL_FRAMES; i++) pending.add(i);
     let readyCount = 0;
 
+    const totalF = CONFIG.TOTAL_FRAMES;
+    const skeletonFrames: number[] = [];
+    const step = Math.floor(totalF / CONFIG.PRELOAD_BLOCKING);
+    for (let i = 0; i < totalF; i += Math.max(1, step)) {
+      skeletonFrames.push(i);
+    }
+    if (!skeletonFrames.includes(totalF - 1)) skeletonFrames.push(totalF - 1);
+
+    const remaining = new Set<number>();
+    for (let i = 0; i < totalF; i++) {
+      if (!skeletonFrames.includes(i)) remaining.add(i);
+    }
+
+    const initialQueue = [...skeletonFrames];
+    let initialDone = false;
+
     function pickNext(): number | null {
-      if (pending.size === 0) return null;
+      if (initialQueue.length > 0) return initialQueue.shift()!;
+      if (remaining.size === 0) return null;
       const center = Math.round(s.targetFrameF);
       let best: number | null = null;
       let bestDist = Infinity;
-      for (const idx of pending) {
+      for (const idx of remaining) {
         const dist = Math.abs(idx - center);
         if (dist < bestDist) {
           bestDist = dist;
           best = idx;
         }
       }
+      if (best !== null) remaining.delete(best);
       return best;
+    }
+
+    function onFrameLoaded(idx: number, bitmap: ImageBitmap | HTMLImageElement) {
+      s.loFrames[idx] = bitmap;
+      s.loLoaded[idx] = true;
+      readyCount++;
+
+      if (!initialDone && readyCount >= CONFIG.PRELOAD_BLOCKING) {
+        initialDone = true;
+        s.initialLoadDone = true;
+        if (loaderRef.current) {
+          loaderRef.current.style.opacity = "0";
+          loaderRef.current.style.pointerEvents = "none";
+        }
+        cacheTunnelRect();
+        drawFrame(0);
+        s.rafId = requestAnimationFrame(tick);
+        onScroll();
+      }
     }
 
     function loadNext() {
       while (activeLoads < CONCURRENCY) {
         const idx = pickNext();
         if (idx === null) return;
-        pending.delete(idx);
         activeLoads++;
 
         loadBitmap(framePath(idx + 1, "lo"))
-          .then((bitmap) => {
-            s.loFrames[idx] = bitmap;
-            s.loLoaded[idx] = true;
-            readyCount++;
-
-            if (readyCount === CONFIG.PRELOAD_BLOCKING && !s.initialLoadDone) {
-              s.initialLoadDone = true;
-              if (loaderRef.current) {
-                loaderRef.current.style.opacity = "0";
-                loaderRef.current.style.pointerEvents = "none";
-              }
-              cacheTunnelRect();
-              drawFrame(0);
-              s.rafId = requestAnimationFrame(tick);
-              onScroll();
-            }
-          })
+          .then((bitmap) => onFrameLoaded(idx, bitmap))
           .catch(() => {})
           .finally(() => {
             activeLoads--;

@@ -189,37 +189,68 @@ export function SwitchbackScroll() {
   const [activeTab, setActiveTab] = useState(0);
   const [expandedFeature, setExpandedFeature] = useState(2);
   const prevTabRef = useRef(0);
+  const tlRef = useRef<gsap.core.Timeline | null>(null);
+  const queuedTabRef = useRef<number | null>(null);
 
-  const animateTransition = useCallback((newTab: number) => {
-    if (!contentRef.current || newTab === prevTabRef.current) return;
-
+  const getEls = useCallback(() => {
+    if (!contentRef.current) return [];
     const chips = contentRef.current.querySelector(".step-chips");
     const title = contentRef.current.querySelector(".step-title");
     const desc = contentRef.current.querySelector(".step-desc");
     const rows = contentRef.current.querySelectorAll(".feature-row");
-    const els = [chips, title, desc, ...Array.from(rows)].filter(Boolean);
+    return [chips, title, desc, ...Array.from(rows)].filter(Boolean);
+  }, []);
+
+  const animateTransition = useCallback((newTab: number) => {
+    if (!contentRef.current || newTab === prevTabRef.current) return;
+
+    if (tlRef.current) {
+      tlRef.current.kill();
+      const els = getEls();
+      gsap.killTweensOf(els);
+    }
+
+    queuedTabRef.current = null;
+    const goingUp = newTab < prevTabRef.current;
+    const outY = goingUp ? 20 : -20;
+    const inY = goingUp ? -20 : 20;
 
     const tl = gsap.timeline();
+    tlRef.current = tl;
 
-    tl.to(els, {
-      y: -30,
+    tl.to(getEls(), {
+      y: outY,
       opacity: 0,
-      stagger: 0.03,
-      duration: 0.25,
+      stagger: 0.02,
+      duration: 0.18,
       ease: "power2.in",
       onComplete: () => {
+        prevTabRef.current = newTab;
         setActiveTab(newTab);
         setExpandedFeature(2);
-        prevTabRef.current = newTab;
+
+        requestAnimationFrame(() => {
+          const freshEls = getEls();
+          gsap.set(freshEls, { y: inY, opacity: 0 });
+          gsap.to(freshEls, {
+            y: 0,
+            opacity: 1,
+            stagger: 0.03,
+            duration: 0.22,
+            ease: "power2.out",
+            onComplete: () => {
+              tlRef.current = null;
+              if (queuedTabRef.current !== null && queuedTabRef.current !== prevTabRef.current) {
+                const next = queuedTabRef.current;
+                queuedTabRef.current = null;
+                animateTransition(next);
+              }
+            },
+          });
+        });
       },
     });
-
-    tl.fromTo(
-      els,
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, stagger: 0.05, duration: 0.35, ease: "power2.out" }
-    );
-  }, []);
+  }, [getEls]);
 
   useGSAP(
     () => {
@@ -239,7 +270,11 @@ export function SwitchbackScroll() {
             totalTabs - 1
           );
           if (idx !== prevTabRef.current) {
-            animateTransition(idx);
+            if (tlRef.current) {
+              queuedTabRef.current = idx;
+            } else {
+              animateTransition(idx);
+            }
           }
         },
       });
