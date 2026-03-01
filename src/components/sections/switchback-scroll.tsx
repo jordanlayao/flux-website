@@ -5,7 +5,7 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
-  Gamepad2,
+  Eye,
   Radio,
   TrendingUpDown,
   UserRound,
@@ -17,7 +17,7 @@ import {
 gsap.registerPlugin(ScrollTrigger);
 
 const tabs = [
-  { id: "visibility", label: "Visibility", icon: Gamepad2 },
+  { id: "visibility", label: "Visibility", icon: Eye },
   { id: "intelligence", label: "Intelligence", icon: Radio },
   { id: "control", label: "Control", icon: TrendingUpDown },
 ];
