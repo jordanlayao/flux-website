@@ -295,10 +295,12 @@ export function FooterAnimation() {
     window.addEventListener("resize", resizeCanvas);
 
     const tick = () => {
-      if (s.isScrolling) {
+      const delta = s.targetFrameF - s.currentFrameF;
+      const lerpFactor = s.isScrolling ? 0.28 : 0.15;
+      if (Math.abs(delta) < 0.01) {
         s.currentFrameF = s.targetFrameF;
       } else {
-        s.currentFrameF += (s.targetFrameF - s.currentFrameF) * 0.12;
+        s.currentFrameF += delta * lerpFactor;
       }
 
       const frameIdx = Math.round(s.currentFrameF);
@@ -352,7 +354,7 @@ export function FooterAnimation() {
       clearTimeout(scrollEndTimer);
       scrollEndTimer = window.setTimeout(() => {
         s.isScrolling = false;
-      }, 150);
+      }, 80);
 
       clearTimeout(s.hiSwapTimer);
       s.hiSwapTimer = window.setTimeout(swapToHiRes, CONFIG.HI_SWAP_DELAY);
