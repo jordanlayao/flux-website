@@ -418,17 +418,18 @@ export function SwitchbackScroll() {
         }
       );
 
+      const extraHold = 1;
+      const totalScroll = totalTabs + extraHold;
+
       ScrollTrigger.create({
         trigger: sectionRef.current,
         start: "top top",
-        end: `+=${totalTabs * 100}%`,
+        end: `+=${totalScroll * 100}%`,
         pin: true,
         scrub: 0.5,
         onUpdate: (self) => {
-          const idx = Math.min(
-            Math.floor(self.progress * totalTabs),
-            totalTabs - 1
-          );
+          const tabProgress = self.progress * totalScroll;
+          const idx = Math.min(Math.floor(tabProgress), totalTabs - 1);
           if (idx !== prevTabRef.current) {
             if (tlRef.current) {
               queuedTabRef.current = idx;
