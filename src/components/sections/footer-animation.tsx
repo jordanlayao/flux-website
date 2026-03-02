@@ -169,6 +169,8 @@ export function FooterAnimation() {
     isMobile: false,
     tunnelTop: 0,
     tunnelH: 1,
+    isVisible: false,
+    tickRunning: false,
   });
 
   const ease = useRef(makeCubicBezier(...CONFIG.EASING)).current;
@@ -308,6 +310,11 @@ export function FooterAnimation() {
     window.addEventListener("resize", resizeCanvas);
 
     const tick = () => {
+      if (!s.isVisible && !s.isScrolling) {
+        s.tickRunning = false;
+        return;
+      }
+
       const delta = s.targetFrameF - s.currentFrameF;
       const lerpFactor = s.isScrolling ? 0.3 : 0.15;
       if (Math.abs(delta) < 0.01) {
@@ -325,6 +332,22 @@ export function FooterAnimation() {
       updateOverlays();
       s.rafId = requestAnimationFrame(tick);
     };
+
+    const startTick = () => {
+      if (!s.tickRunning && s.initialLoadDone) {
+        s.tickRunning = true;
+        s.rafId = requestAnimationFrame(tick);
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        s.isVisible = entry.isIntersecting;
+        if (s.isVisible) startTick();
+      },
+      { rootMargin: "200px 0px" }
+    );
+    if (tunnelRef.current) observer.observe(tunnelRef.current);
 
     const swapToHiRes = () => {
       if (s.isScrolling) return;
@@ -359,6 +382,7 @@ export function FooterAnimation() {
       const easedP = ease(s.rawScrollProgress);
       s.targetFrameF = easedP * (CONFIG.TOTAL_FRAMES - 1);
       s.isScrolling = true;
+      startTick();
 
       clearTimeout(scrollEndTimer);
       scrollEndTimer = window.setTimeout(() => {
@@ -439,7 +463,7 @@ export function FooterAnimation() {
         }
         cacheTunnelRect();
         drawFrame(0);
-        s.rafId = requestAnimationFrame(tick);
+        startTick();
         onScroll();
       }
     }
@@ -463,6 +487,7 @@ export function FooterAnimation() {
     loadNext();
 
     return () => {
+      observer.disconnect();
       window.removeEventListener("resize", resizeCanvas);
       window.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(s.rafId);

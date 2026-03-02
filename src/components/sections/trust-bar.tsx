@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+import { useInView } from "react-intersection-observer";
 import { ScrollReveal } from "@/components/animations/scroll-reveal";
 
 const logos = [
@@ -13,6 +15,8 @@ const logos = [
 ];
 
 export function TrustBar() {
+  const { ref: marqueeRef, inView } = useInView({ rootMargin: "100px 0px" });
+
   return (
     <section className="py-36 pb-60">
       <div className="mx-auto max-w-[1216px] px-6">
@@ -23,13 +27,16 @@ export function TrustBar() {
               product teams.
             </p>
 
-            <div className="relative overflow-hidden">
+            <div ref={marqueeRef} className="relative overflow-hidden">
               {/* Left fade */}
               <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-24 bg-gradient-to-r from-[#171616] to-transparent" />
               {/* Right fade */}
               <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-[#171616] to-transparent" />
 
-              <div className="flex w-max animate-scroll">
+              <div
+                className="flex w-max animate-scroll"
+                style={{ animationPlayState: inView ? "running" : "paused" }}
+              >
                 {[...logos, ...logos].map((logo, i) => (
                   <div
                     key={`${logo.name}-${i}`}
