@@ -86,4 +86,4 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Design
 
-The full design file lives in Figma. Every section was designed from scratch — no templates, no UI kits.
+The full design file lives in Figma. Every section was designed from scratch — no templates, no UI kits. Heaviy inspired by Adeline and Linears website.
