@@ -64,17 +64,33 @@ function makeCubicBezier(p1x: number, p1y: number, p2x: number, p2y: number) {
   };
 }
 
-function bspOrder(total: number) {
+function bspOrder(total: number): number[] {
   const order: number[] = [];
-  const queue: [number, number][] = [[0, total - 1]];
-  while (queue.length > 0) {
-    const [start, end] = queue.shift()!;
-    if (start > end) continue;
+  const visited = new Set<number>();
+
+  function subdivide(start: number, end: number) {
+    if (start > end) return;
     const mid = Math.floor((start + end) / 2);
-    order.push(mid);
-    queue.push([start, mid - 1]);
-    queue.push([mid + 1, end]);
+    if (!visited.has(mid)) {
+      visited.add(mid);
+      order.push(mid);
+    }
+    subdivide(start, mid - 1);
+    subdivide(mid + 1, end);
   }
+
+  visited.add(0);
+  order.push(0);
+  visited.add(total - 1);
+  order.push(total - 1);
+
+  const mid = Math.floor((total - 1) / 2);
+  visited.add(mid);
+  order.push(mid);
+
+  subdivide(0, mid - 1);
+  subdivide(mid + 1, total - 1);
+
   return order;
 }
 
@@ -171,7 +187,6 @@ export function FooterAnimation() {
     tunnelTop: 0,
     tunnelH: 1,
     isVisible: false,
-    tickRunning: false,
   });
 
   const ease = useRef(makeCubicBezier(...CONFIG.EASING)).current;
@@ -320,18 +335,18 @@ export function FooterAnimation() {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
-    const tick = () => {
-      if (!s.isVisible && !s.isScrolling) {
-        s.tickRunning = false;
-        return;
-      }
+    // Scroll-event-driven render: cancel previous pending RAF, request new one
+    const render = () => {
+      if (!s.initialLoadDone) return;
 
       const delta = s.targetFrameF - s.currentFrameF;
-      const lerpFactor = s.isScrolling ? 0.3 : 0.15;
-      if (Math.abs(delta) < 0.01) {
+      const lerpFactor = s.isScrolling ? 0.5 : 0.18;
+      if (Math.abs(delta) < 0.05) {
         s.currentFrameF = s.targetFrameF;
       } else {
         s.currentFrameF += delta * lerpFactor;
+        // Keep rendering until settled
+        s.rafId = requestAnimationFrame(render);
       }
 
       const frameIdx = Math.round(s.currentFrameF);
@@ -341,20 +356,18 @@ export function FooterAnimation() {
       }
 
       updateOverlays();
-      s.rafId = requestAnimationFrame(tick);
     };
 
-    const startTick = () => {
-      if (!s.tickRunning && s.initialLoadDone) {
-        s.tickRunning = true;
-        s.rafId = requestAnimationFrame(tick);
-      }
+    const scheduleRender = () => {
+      if (!s.initialLoadDone || !s.isVisible) return;
+      cancelAnimationFrame(s.rafId);
+      s.rafId = requestAnimationFrame(render);
     };
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         s.isVisible = entry.isIntersecting;
-        if (s.isVisible) startTick();
+        if (s.isVisible) scheduleRender();
       },
       { rootMargin: "200px 0px" }
     );
@@ -376,6 +389,7 @@ export function FooterAnimation() {
             s.hiFrames[i] = bitmap;
             s.hiLoaded[i] = true;
             s.lastDrawnFrame = -1;
+            scheduleRender();
           })
           .catch(() => {});
       }
@@ -393,18 +407,23 @@ export function FooterAnimation() {
       const easedP = ease(s.rawScrollProgress);
       s.targetFrameF = easedP * (CONFIG.TOTAL_FRAMES - 1);
       s.isScrolling = true;
-      startTick();
+      scheduleRender();
 
       clearTimeout(scrollEndTimer);
       scrollEndTimer = window.setTimeout(() => {
         s.isScrolling = false;
-      }, 100);
+        scheduleRender();
+      }, 80);
 
       clearTimeout(s.hiSwapTimer);
       s.hiSwapTimer = window.setTimeout(swapToHiRes, CONFIG.HI_SWAP_DELAY);
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", () => {
+      cacheTunnelRect();
+      scheduleRender();
+    });
 
     async function loadBitmap(
       url: string
@@ -421,6 +440,7 @@ export function FooterAnimation() {
       } catch {
         return new Promise((resolve, reject) => {
           const img = new Image();
+          img.fetchPriority = "high";
           img.onload = () => {
             frameCache.set(url, img);
             resolve(img);
@@ -431,50 +451,20 @@ export function FooterAnimation() {
       }
     }
 
+    // BSP loading: loads frames in binary-tree order for maximum coverage
     const CONCURRENCY = 6;
     let activeLoads = 0;
     let readyCount = 0;
 
-    const totalF = CONFIG.TOTAL_FRAMES;
-    const skeletonFrames: number[] = [];
-    const step = Math.floor(totalF / CONFIG.PRELOAD_BLOCKING);
-    for (let i = 0; i < totalF; i += Math.max(1, step)) {
-      skeletonFrames.push(i);
-    }
-    if (!skeletonFrames.includes(totalF - 1)) skeletonFrames.push(totalF - 1);
-
-    const remaining = new Set<number>();
-    for (let i = 0; i < totalF; i++) {
-      if (!skeletonFrames.includes(i)) remaining.add(i);
-    }
-
-    const initialQueue = [...skeletonFrames];
-    let initialDone = false;
-
-    function pickNext(): number | null {
-      if (initialQueue.length > 0) return initialQueue.shift()!;
-      if (remaining.size === 0) return null;
-      const center = Math.round(s.targetFrameF);
-      let best: number | null = null;
-      let bestDist = Infinity;
-      for (const idx of remaining) {
-        const dist = Math.abs(idx - center);
-        if (dist < bestDist) {
-          bestDist = dist;
-          best = idx;
-        }
-      }
-      if (best !== null) remaining.delete(best);
-      return best;
-    }
+    const loadOrder = bspOrder(CONFIG.TOTAL_FRAMES);
+    let loadIdx = 0;
 
     function onFrameLoaded(idx: number, bitmap: ImageBitmap | HTMLImageElement) {
       s.loFrames[idx] = bitmap;
       s.loLoaded[idx] = true;
       readyCount++;
 
-      if (!initialDone && readyCount >= CONFIG.PRELOAD_BLOCKING) {
-        initialDone = true;
+      if (!s.initialLoadDone && readyCount >= CONFIG.PRELOAD_BLOCKING) {
         s.initialLoadDone = true;
         if (loaderRef.current) {
           loaderRef.current.style.opacity = "0";
@@ -482,15 +472,15 @@ export function FooterAnimation() {
         }
         cacheTunnelRect();
         drawFrame(0);
-        startTick();
         onScroll();
+        scheduleRender();
       }
     }
 
     function loadNext() {
-      while (activeLoads < CONCURRENCY) {
-        const idx = pickNext();
-        if (idx === null) return;
+      while (activeLoads < CONCURRENCY && loadIdx < loadOrder.length) {
+        const idx = loadOrder[loadIdx++];
+        if (s.loLoaded[idx]) continue;
         activeLoads++;
 
         loadBitmap(framePath(idx + 1, "lo"))
@@ -512,8 +502,6 @@ export function FooterAnimation() {
       cancelAnimationFrame(s.rafId);
       clearTimeout(scrollEndTimer);
       clearTimeout(s.hiSwapTimer);
-      remaining.clear();
-      initialQueue.length = 0;
     };
   }, [drawFrame, updateOverlays, ease, framePath]);
 

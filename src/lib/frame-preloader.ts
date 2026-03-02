@@ -9,6 +9,36 @@ let started = false;
 let activeLoads = 0;
 let queue: string[] = [];
 
+function bspOrder(total: number): number[] {
+  const order: number[] = [];
+  const visited = new Set<number>();
+
+  function subdivide(start: number, end: number) {
+    if (start > end || visited.has(start) && visited.has(end)) return;
+    const mid = Math.floor((start + end) / 2);
+    if (!visited.has(mid)) {
+      visited.add(mid);
+      order.push(mid);
+    }
+    subdivide(start, mid - 1);
+    subdivide(mid + 1, end);
+  }
+
+  visited.add(0);
+  order.push(0);
+  visited.add(total - 1);
+  order.push(total - 1);
+
+  const mid = Math.floor((total - 1) / 2);
+  visited.add(mid);
+  order.push(mid);
+
+  subdivide(0, mid - 1);
+  subdivide(mid + 1, total - 1);
+
+  return order;
+}
+
 async function loadOne(url: string): Promise<void> {
   if (frameCache.has(url)) return;
   try {
@@ -47,18 +77,8 @@ export function startFramePreload() {
   const isMobile = window.innerWidth <= 768;
   const prefix = isMobile ? "mobile" : "desktop";
 
-  const step = Math.max(1, Math.floor(TOTAL_FRAMES / 60));
-  for (let i = 0; i < TOTAL_FRAMES; i += step) {
-    queue.push(framePath(i + 1, prefix));
-  }
-  if (!queue.includes(framePath(TOTAL_FRAMES, prefix))) {
-    queue.push(framePath(TOTAL_FRAMES, prefix));
-  }
-
-  for (let i = 0; i < TOTAL_FRAMES; i++) {
-    const url = framePath(i + 1, prefix);
-    if (!queue.includes(url)) queue.push(url);
-  }
+  const loadOrder = bspOrder(TOTAL_FRAMES);
+  queue = loadOrder.map((i) => framePath(i + 1, prefix));
 
   if ("requestIdleCallback" in window) {
     (window as any).requestIdleCallback(() => pump());
