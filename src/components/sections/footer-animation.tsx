@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { frameCache } from "@/lib/frame-preloader";
 
 const CONFIG = {
   TOTAL_FRAMES: 386,
@@ -287,6 +288,16 @@ export function FooterAnimation() {
     const s = stateRef.current;
     s.isMobile = window.innerWidth <= 768;
 
+    const prefix = s.isMobile ? "mobile" : "desktop";
+    for (let i = 0; i < CONFIG.TOTAL_FRAMES; i++) {
+      const url = `/frames/${prefix}-lo/frame_${String(i + 1).padStart(4, "0")}.jpg`;
+      const cached = frameCache.get(url);
+      if (cached && !s.loLoaded[i]) {
+        s.loFrames[i] = cached;
+        s.loLoaded[i] = true;
+      }
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     ctxRef.current = canvas.getContext("2d", { alpha: false });
@@ -398,14 +409,22 @@ export function FooterAnimation() {
     async function loadBitmap(
       url: string
     ): Promise<ImageBitmap | HTMLImageElement> {
+      const cached = frameCache.get(url);
+      if (cached) return cached;
+
       try {
         const resp = await fetch(url);
         const blob = await resp.blob();
-        return await createImageBitmap(blob);
+        const bitmap = await createImageBitmap(blob);
+        frameCache.set(url, bitmap);
+        return bitmap;
       } catch {
         return new Promise((resolve, reject) => {
           const img = new Image();
-          img.onload = () => resolve(img);
+          img.onload = () => {
+            frameCache.set(url, img);
+            resolve(img);
+          };
           img.onerror = reject;
           img.src = url;
         });

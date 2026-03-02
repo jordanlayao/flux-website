@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import { Navigation } from "@/components/sections/navigation";
 import { Hero } from "@/components/sections/hero";
 import { GsapProvider } from "@/components/animations/gsap-provider";
+import { FramePreloadTrigger } from "@/components/frame-preload-trigger";
 
 const QuoteBlock = dynamic(() =>
   import("@/components/sections/quote-block").then((m) => m.QuoteBlock)
@@ -53,6 +54,7 @@ const onboardingCards = [
 export default function Home() {
   return (
     <GsapProvider>
+      <FramePreloadTrigger />
       <Navigation />
       <Hero />
       <QuoteBlock />
