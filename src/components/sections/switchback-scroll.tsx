@@ -286,7 +286,7 @@ export function SwitchbackScroll() {
 
   return (
     <section ref={sectionRef} className="h-screen bg-surface-elevated">
-      <div className="ml-auto flex h-full max-w-[1328px] items-start gap-8 py-12 pr-0 pl-6">
+      <div className="mx-auto flex h-full max-w-[1216px] items-start gap-8 px-6 py-12">
         {/* Left column */}
         <div className="flex w-[488px] shrink-0 flex-col justify-between self-stretch">
           <div className="flex flex-col gap-16 pt-6">
