@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useCallback, useEffect } from "react";
+import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -289,14 +290,15 @@ function IllustrationControl() {
           style={{ left: img.x, top: img.y, width: img.w }}
         >
           <div
-            className="overflow-hidden"
+            className="relative overflow-hidden"
             style={{ width: img.w, height: img.h }}
           >
-            <img
+            <Image
               src={img.src}
               alt=""
-              className="size-full object-cover"
-              loading="lazy"
+              fill
+              className="object-cover"
+              sizes={`${img.w}px`}
             />
           </div>
           {img.label && (

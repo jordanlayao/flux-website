@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import NextImage from "next/image";
 import { frameCache } from "@/lib/frame-preloader";
 
 const CONFIG = {
@@ -398,6 +399,11 @@ export function FooterAnimation() {
     let scrollEndTimer = 0;
 
     const onScroll = () => {
+      if (!s.isVisible) {
+        s.lastScrollY = window.scrollY;
+        return;
+      }
+
       const scrolled = window.scrollY - s.tunnelTop;
       s.rawScrollProgress = clamp01(scrolled / s.tunnelH);
 
@@ -419,11 +425,13 @@ export function FooterAnimation() {
       s.hiSwapTimer = window.setTimeout(swapToHiRes, CONFIG.HI_SWAP_DELAY);
     };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", () => {
+    const onResize = () => {
       cacheTunnelRect();
       scheduleRender();
-    });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
 
     async function loadBitmap(
       url: string
@@ -498,6 +506,7 @@ export function FooterAnimation() {
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(s.rafId);
       clearTimeout(scrollEndTimer);
@@ -589,7 +598,7 @@ export function FooterAnimation() {
           <div className="grid grid-cols-[180px_repeat(5,1fr)] gap-6 border-b border-white/7 pb-14">
             <div className="flex items-start pt-0.5">
               <Link href="/" className="flex items-center">
-                <img src="/logo/flux-logo.svg" alt="Flux" className="h-6 w-auto brightness-0 invert" />
+                <NextImage src="/logo/flux-logo.svg" alt="Flux" width={80} height={24} className="h-6 w-auto brightness-0 invert" />
               </Link>
             </div>
 
