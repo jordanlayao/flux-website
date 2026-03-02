@@ -65,7 +65,7 @@ export function BentoCard4() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, #131212 43.76%, #867c69 100%)",
+            "linear-gradient(180deg, #131212 30%, #3d3830 65%, #867c69 100%)",
         }}
       />
       {/* Grain overlay */}
