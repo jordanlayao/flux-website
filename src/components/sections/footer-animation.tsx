@@ -314,6 +314,12 @@ export function FooterAnimation() {
       }
     }
 
+    // Count frames already in cache so readyCount reflects actual availability
+    let readyCount = 0;
+    for (let i = 0; i < CONFIG.TOTAL_FRAMES; i++) {
+      if (s.loLoaded[i]) readyCount++;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     ctxRef.current = canvas.getContext("2d", { alpha: false });
@@ -374,6 +380,9 @@ export function FooterAnimation() {
     );
     if (tunnelRef.current) observer.observe(tunnelRef.current);
 
+    let hiActiveLoads = 0;
+    const HI_CONCURRENCY = 4;
+
     const swapToHiRes = () => {
       if (s.isScrolling) return;
       const center = Math.round(s.currentFrameF);
@@ -384,7 +393,8 @@ export function FooterAnimation() {
       );
 
       for (let i = start; i <= end; i++) {
-        if (s.hiLoaded[i]) continue;
+        if (s.hiLoaded[i] || hiActiveLoads >= HI_CONCURRENCY) continue;
+        hiActiveLoads++;
         loadBitmap(framePath(i + 1, "hi"))
           .then((bitmap) => {
             s.hiFrames[i] = bitmap;
@@ -392,7 +402,8 @@ export function FooterAnimation() {
             s.lastDrawnFrame = -1;
             scheduleRender();
           })
-          .catch(() => {});
+          .catch(() => {})
+          .finally(() => { hiActiveLoads--; });
       }
     };
 
@@ -459,19 +470,8 @@ export function FooterAnimation() {
       }
     }
 
-    // BSP loading: loads frames in binary-tree order for maximum coverage
-    const CONCURRENCY = 6;
-    let activeLoads = 0;
-    let readyCount = 0;
-
-    const loadOrder = bspOrder(CONFIG.TOTAL_FRAMES);
-    let loadIdx = 0;
-
-    function onFrameLoaded(idx: number, bitmap: ImageBitmap | HTMLImageElement) {
-      s.loFrames[idx] = bitmap;
-      s.loLoaded[idx] = true;
-      readyCount++;
-
+    // If the preloader already has enough frames cached, unlock immediately
+    const unlockIfReady = () => {
       if (!s.initialLoadDone && readyCount >= CONFIG.PRELOAD_BLOCKING) {
         s.initialLoadDone = true;
         if (loaderRef.current) {
@@ -483,6 +483,21 @@ export function FooterAnimation() {
         onScroll();
         scheduleRender();
       }
+    };
+    unlockIfReady();
+
+    // BSP loading: loads frames in binary-tree order for maximum coverage
+    const CONCURRENCY = 6;
+    let activeLoads = 0;
+
+    const loadOrder = bspOrder(CONFIG.TOTAL_FRAMES);
+    let loadIdx = 0;
+
+    function onFrameLoaded(idx: number, bitmap: ImageBitmap | HTMLImageElement) {
+      s.loFrames[idx] = bitmap;
+      s.loLoaded[idx] = true;
+      readyCount++;
+      unlockIfReady();
     }
 
     function loadNext() {
@@ -527,7 +542,6 @@ export function FooterAnimation() {
           <canvas
             ref={canvasRef}
             className="absolute inset-0 block h-full w-full"
-            style={{ willChange: "transform" }}
           />
 
           {/* Entry black fade-in */}

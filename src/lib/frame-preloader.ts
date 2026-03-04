@@ -1,5 +1,5 @@
 const TOTAL_FRAMES = 386;
-const CONCURRENCY = 4;
+const CONCURRENCY = 8;
 
 type FrameAsset = ImageBitmap | HTMLImageElement;
 
@@ -80,9 +80,6 @@ export function startFramePreload() {
   const loadOrder = bspOrder(TOTAL_FRAMES);
   queue = loadOrder.map((i) => framePath(i + 1, prefix));
 
-  if ("requestIdleCallback" in window) {
-    (window as any).requestIdleCallback(() => pump());
-  } else {
-    setTimeout(pump, 2000);
-  }
+  // Start promptly — don't defer indefinitely with requestIdleCallback
+  setTimeout(pump, 100);
 }
